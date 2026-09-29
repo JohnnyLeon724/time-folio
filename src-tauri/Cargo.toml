@@ -32,3 +32,6 @@ tauri-plugin-single-instance = { version = "2", optional = true }
 name = "hourtrail"
 path = "src/main.rs"
 required-features = ["desktop"]
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging", "Win32_System_LibraryLoader", "Win32_Graphics_Gdi"] }
