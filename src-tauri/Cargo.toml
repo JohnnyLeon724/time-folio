@@ -1,0 +1,34 @@
+[package]
+name = "hourtrail"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "hourtrail"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-plugin-dialog", "dep:tauri-plugin-single-instance"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+rusqlite = { version = "0.37", features = ["bundled", "backup"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+sha2 = "0.10"
+csv = "1"
+tempfile = "3"
+tauri = { version = "2", features = ["tray-icon"], optional = true }
+tauri-plugin-dialog = { version = "2", optional = true }
+tauri-plugin-single-instance = { version = "2", optional = true }
+
+[[bin]]
+name = "hourtrail"
+path = "src/main.rs"
+required-features = ["desktop"]
