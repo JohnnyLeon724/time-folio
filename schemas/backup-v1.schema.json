@@ -1,0 +1,279 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "hourtrail-backup"
+    },
+    "formatVersion": {
+      "const": 1
+    },
+    "appVersion": {
+      "type": "string"
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "workspaceId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "portableSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reportingTimeZone": {
+          "type": "string"
+        },
+        "weekStartsOn": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        }
+      },
+      "required": [
+        "reportingTimeZone",
+        "weekStartsOn"
+      ]
+    },
+    "workEntries": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 10000
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "timer"
+            ]
+          },
+          "status": {
+            "enum": [
+              "completed",
+              "needs_review"
+            ]
+          },
+          "createdAt": {
+            "type": "integer",
+            "minimum": 946684800000,
+            "maximum": 4102444799999
+          },
+          "updatedAt": {
+            "type": "integer",
+            "minimum": 946684800000,
+            "maximum": 4102444799999
+          },
+          "deletedAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 946684800000,
+                "maximum": 4102444799999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "note",
+          "source",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      }
+    },
+    "workSegments": {
+      "type": "array",
+      "maxItems": 500000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startAt": {
+            "type": "integer",
+            "minimum": 946684800000,
+            "maximum": 4102444799999
+          },
+          "endAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 946684800000,
+                "maximum": 4102444799999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "entryId",
+          "startAt",
+          "endAt"
+        ]
+      }
+    },
+    "reviewItems": {
+      "type": "array",
+      "maxItems": 500000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "enum": [
+              "sleep",
+              "interruption",
+              "clock_change",
+              "recovery"
+            ]
+          },
+          "candidateStartAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 946684800000,
+                "maximum": 4102444799999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidateEndAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 946684800000,
+                "maximum": 4102444799999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "boundaryQuality": {
+            "enum": [
+              "observed",
+              "estimated"
+            ]
+          },
+          "resolution": {
+            "enum": [
+              "unresolved",
+              "included",
+              "excluded",
+              "adjusted"
+            ]
+          },
+          "resolvedAt": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 946684800000,
+                "maximum": 4102444799999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "entryId",
+          "reason",
+          "candidateStartAt",
+          "candidateEndAt",
+          "boundaryQuality",
+          "resolution",
+          "resolvedAt"
+        ]
+      }
+    },
+    "timeZoneDataVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reportSummaries": {
+      "type": "array",
+      "maxItems": 1202,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "month": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}$"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3155760000000
+          }
+        },
+        "required": [
+          "month",
+          "durationMs"
+        ]
+      }
+    }
+  },
+  "required": [
+    "format",
+    "formatVersion",
+    "appVersion",
+    "exportedAt",
+    "workspaceId",
+    "portableSettings",
+    "workEntries",
+    "workSegments"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HourTrail portable backup v1"
+}
