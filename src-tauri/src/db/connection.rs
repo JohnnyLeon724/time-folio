@@ -54,6 +54,29 @@ impl Database {
             f(&guard)
         }
     }
+    pub fn receipt<T: DeserializeOwned>(
+        &self,
+        request_id: &str,
+        digest: &str,
+    ) -> Result<Option<MutationResult<T>>> {
+        self.read(|c| {
+            let old: Option<(String, String)> = c
+                .query_row(
+                    "SELECT digest,result FROM operation_receipts WHERE request_id=?1",
+                    [request_id],
+                    |r| Ok((r.get(0)?, r.get(1)?)),
+                )
+                .optional()?;
+            match old {
+                Some((old, payload)) if old == digest => Ok(Some(serde_json::from_str(&payload)?)),
+                Some(_) => Err(AppError::new(
+                    "STATE_CONFLICT",
+                    "同一请求标识不能用于不同操作",
+                )),
+                None => Ok(None),
+            }
+        })
+    }
     pub fn revision(&self) -> Result<String> {
         self.read(|c| meta(c, "mutation_revision"))
     }
