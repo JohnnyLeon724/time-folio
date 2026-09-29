@@ -12,3 +12,5 @@ pub mod backup;
 
 pub mod restore;
 pub mod snapshots;
+
+pub mod csv;
