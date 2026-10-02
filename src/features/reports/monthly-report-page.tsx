@@ -29,10 +29,18 @@ function ReportContent({ report, onExport, onEdit, onReview }: Props) {
             {report.month} · {report.reportingTimeZone}
           </p>
         </div>
-        <Button onClick={onExport}>
-          <Download size={17} />
-          导出工时表
-        </Button>
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <Button onClick={onExport} disabled={!report.rows.length}>
+            <Download size={17} />
+            导出整月
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            导出范围：{report.month} 整月 · {report.rows.length} 个时段
+          </p>
+          <p className="text-xs text-muted-foreground">
+            搜索和日期筛选仅影响明细，不影响整月导出。
+          </p>
+        </div>
       </div>
       <div className="report-stats">
         <Card>

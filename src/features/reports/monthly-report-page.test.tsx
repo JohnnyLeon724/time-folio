@@ -17,6 +17,18 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
+it('makes the whole-month export scope explicit even when details are filtered', () => {
+  const onExport = vi.fn();
+  render(<MonthlyReport report={report} onExport={onExport} onEdit={vi.fn()} onReview={vi.fn()} />);
+  fireEvent.change(screen.getByRole('textbox', { name: '搜索任务' }), {
+    target: { value: '开发' },
+  });
+  expect(screen.getByText('导出范围：2026-10 整月 · 2 个时段')).toBeInTheDocument();
+  expect(screen.getByText('搜索和日期筛选仅影响明细，不影响整月导出。')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '导出整月' }));
+  expect(onExport).toHaveBeenCalledOnce();
+});
+
 const report: Report = {
   month: '2026-10',
   reportingTimeZone: 'Asia/Shanghai',
