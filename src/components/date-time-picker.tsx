@@ -50,6 +50,14 @@ export function DateTimePicker({
           <Calendar
             mode="single"
             locale={zhCN}
+            autoFocus
+            labels={{
+              labelNav: () => '月份导航',
+              labelPrevious: () => '上一月',
+              labelNext: () => '下一月',
+              labelMonthDropdown: () => '选择月份',
+              labelYearDropdown: () => '选择年份',
+            }}
             weekStartsOn={1}
             captionLayout="dropdown"
             startMonth={new Date(1999, 0)}

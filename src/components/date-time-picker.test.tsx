@@ -1,6 +1,24 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { DateTimePicker, MonthPicker } from './date-time-picker';
+import { useState } from 'react';
+
+it('changes minutes inside a form without resetting the selected time', () => {
+  Element.prototype.scrollIntoView = vi.fn();
+  function Form() {
+    const [value, setValue] = useState('2026-10-03T09:12:34');
+    return (
+      <form>
+        <DateTimePicker label="开始" value={value} onChange={setValue} />
+        <output>{value}</output>
+      </form>
+    );
+  }
+  render(<Form />);
+  fireEvent.keyDown(screen.getByRole('combobox', { name: '开始分' }), { key: 'ArrowDown' });
+  fireEvent.click(screen.getByRole('option', { name: '30分' }));
+  expect(screen.getByText('2026-10-03T09:30:34')).toBeInTheDocument();
+});
 
 it('opens a Chinese calendar and preserves wall clock time when changing the date', () => {
   const onChange = vi.fn();
