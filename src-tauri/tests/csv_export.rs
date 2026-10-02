@@ -18,6 +18,7 @@ fn csv_escapes_text_and_preserves_exact_duration() {
     assert!(s.contains("'=SUM(1,2)"));
     assert!(s.contains("日期,任务,开始时间,结束时间,时长\r\n"));
     assert!(s.contains("01:00:00.001"));
+    assert!(s.contains("2026-09-29 00:00:00,2026-09-29 01:00:00.001"));
     assert!(s.contains("\r\n"));
 }
 
@@ -39,6 +40,10 @@ fn csv_keeps_separate_periods_and_splits_midnight() {
     assert_eq!(reader.headers().unwrap().len(), 5);
     let rows: Vec<_> = reader.records().map(|r| r.unwrap()).collect();
     assert_eq!(rows.len(), 4);
+    assert_eq!(&rows[0][2], "2026-09-29 09:00:00");
+    assert_eq!(&rows[0][3], "2026-09-29 12:00:00");
+    assert_eq!(&rows[2][3], "2026-09-30 00:00:00");
+    assert_eq!(&rows[3][2], "2026-09-30 00:00:00");
     assert_eq!(&rows[0][4], "03:00:00");
     assert_eq!(&rows[1][4], "02:00:00");
     assert_eq!(&rows[2][0], "2026-09-29");

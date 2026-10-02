@@ -5,7 +5,7 @@ use crate::{
         reports::{zone, MonthReport},
     },
 };
-use chrono::{SecondsFormat, TimeZone};
+use chrono::TimeZone;
 use std::path::Path;
 fn cell(s: &str) -> String {
     let t = s.trim_start_matches(|c: char| c.is_whitespace() || c == '\u{feff}');
@@ -32,11 +32,13 @@ pub fn bytes(report: &MonthReport) -> Result<Vec<u8>> {
                 tz.timestamp_millis_opt(r.start_at)
                     .single()
                     .unwrap()
-                    .to_rfc3339_opts(SecondsFormat::AutoSi, false),
+                    .format("%Y-%m-%d %H:%M:%S%.f")
+                    .to_string(),
                 tz.timestamp_millis_opt(r.end_at)
                     .single()
                     .unwrap()
-                    .to_rfc3339_opts(SecondsFormat::AutoSi, false),
+                    .format("%Y-%m-%d %H:%M:%S%.f")
+                    .to_string(),
                 elapsed(r.duration_ms),
             ])
             .map_err(err)?;
