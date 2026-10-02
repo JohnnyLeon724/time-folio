@@ -71,6 +71,7 @@ pnpm exec tauri build --bundles nsis '--' --locked
 - [界面重构计划](docs/superpowers/plans/2026-10-03-monochrome-workspace.md)
 - [项目设计与备份合同](docs/PROJECT_DESIGN.md)
 - [发布验收记录与未完成项](docs/release-checklist.md)
+- [功能与体验优化清单](docs/improvement-backlog.md)
 - [可移植备份 schema](schemas/backup-v1.schema.json)
 
 历史设计中的计划步骤不代表已完成验收；当前证据统一记录在发布验收记录中。
