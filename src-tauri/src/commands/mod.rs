@@ -31,7 +31,7 @@ pub struct Controller {
 impl Controller {
     pub fn new(directory: PathBuf) -> Result<Self> {
         std::fs::create_dir_all(&directory)?;
-        let db = Arc::new(Database::open(&directory.join("hourtrail.db"))?);
+        let db = Arc::new(Database::open(&directory.join("timefolio.db"))?);
         db.read(crate::services::snapshots::verify)?;
         let clock = Arc::new(SystemClock::default());
         let timer = TimerService::new(db.clone(), clock.clone());

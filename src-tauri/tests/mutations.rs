@@ -1,5 +1,5 @@
-use hourtrail::{db::Database, domain::*};
 use rusqlite::params;
+use timefolio::{db::Database, domain::*};
 fn ctx(db: &Database) -> MutationContext {
     MutationContext {
         request_id: id(),

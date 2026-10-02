@@ -29,7 +29,7 @@ impl SnapshotService {
         std::fs::create_dir_all(&self.directory)?;
         let now = chrono::Utc::now().timestamp_millis();
         let name = format!(
-            "hourtrail-{kind}-{}-{}.db",
+            "timefolio-{kind}-{}-{}.db",
             chrono::Utc::now().format("%Y%m%dT%H%M%SZ"),
             id()
         );
@@ -64,12 +64,12 @@ impl SnapshotService {
             let item = item?;
             let name = item.file_name().to_string_lossy().into_owned();
             if item.file_type()?.is_file()
-                && name.starts_with("hourtrail-")
+                && name.starts_with("timefolio-")
                 && name.ends_with(".db")
             {
-                let kind = if name.starts_with("hourtrail-automatic-") {
+                let kind = if name.starts_with("timefolio-automatic-") {
                     "automatic"
-                } else if name.starts_with("hourtrail-pre-restore-") {
+                } else if name.starts_with("timefolio-pre-restore-") {
                     "pre-restore"
                 } else {
                     continue;
@@ -163,7 +163,7 @@ pub fn verify(c: &rusqlite::Connection) -> Result<()> {
     Ok(())
 }
 pub fn preserve_corrupt(path: &Path) -> Result<PathBuf> {
-    let destination = path.with_file_name(format!("hourtrail-damaged-{}.db", id()));
+    let destination = path.with_file_name(format!("timefolio-damaged-{}.db", id()));
     std::fs::copy(path, &destination)?;
     std::fs::File::open(&destination)?.sync_all()?;
     for suffix in ["-wal", "-shm"] {

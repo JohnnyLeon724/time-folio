@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use hourtrail::{domain::*, services::reports::*};
+use timefolio::{domain::*, services::reports::*};
 fn entry(a: &str, b: &str) -> EntryDetail {
     EntryDetail::manual("work".into(), vec![WorkSegment::closed("", at(a), at(b))])
 }

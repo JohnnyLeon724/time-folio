@@ -1,19 +1,19 @@
-# HourTrail — Project Design
+# Timefolio — Project Design
 
 **Design version:** 1.1  
 **Date:** 2026-09-29  
 **Status:** Implementation proposal; no application or installer is included.  
-**Product:** HourTrail  
-**Repository and project folder:** `hourtrail`  
+**Product:** Timefolio\
+**Repository and project folder:** `timefolio`\
 **Suggested repository location for this document:** `docs/PROJECT_DESIGN.md`
 
 ## Detailed timer specification
 
-The confirmed first-release direction is real-time timing, close-to-tray operation, and user review after sleep. See the [detailed timer design](superpowers/specs/2026-09-29-hourtrail-timer-design.md) for state transitions, recovery, UI behavior, command contracts, and acceptance cases. Its explicit defaults refine this overview and remain subject to document review.
+The confirmed first-release direction is real-time timing, close-to-tray operation, and user review after sleep. See the [detailed timer design](superpowers/specs/2026-09-29-timefolio-timer-design.md) for state transitions, recovery, UI behavior, command contracts, and acceptance cases. Its explicit defaults refine this overview and remain subject to document review.
 
 ## 1. Product Goal
 
-HourTrail is a personal, local-first desktop work-hour journal for remote internships. The primary workflow is to start a task timer, pause and resume actual work, finish and review the intervals, verify monthly totals, and export a timesheet. Manual entry and correction support this workflow. A complete portable backup lets a user move from Windows to macOS, or from macOS to Windows, without manually recreating records.
+Timefolio is a personal, local-first desktop work-hour journal for remote internships. The primary workflow is to start a task timer, pause and resume actual work, finish and review the intervals, verify monthly totals, and export a timesheet. Manual entry and correction support this workflow. A complete portable backup lets a user move from Windows to macOS, or from macOS to Windows, without manually recreating records.
 
 The first release is designed for one user and one active computer at a time. Moving data is a deliberate export-and-restore operation, not real-time synchronization. No account, hosted API, cloud storage integration, team approval, payroll calculation, activity surveillance, or screenshot capture is required.
 
@@ -45,16 +45,16 @@ Select and lock compatible dependency releases when implementation starts; this 
 
 | Item | Name or pattern |
 | --- | --- |
-| Product display name | `HourTrail` |
-| Repository / project folder / package name | `hourtrail` |
+| Product display name | `Timefolio` |
+| Repository / project folder / package name | `timefolio` |
 | Design document | `PROJECT_DESIGN.md` |
-| Runtime database | `hourtrail.db` |
-| Portable backup | `hourtrail-backup-<YYYYMMDDTHHmmssZ>.hourtrail.json` |
-| Monthly timesheet | `hourtrail-timesheet-<YYYY-MM>.csv` |
-| Automatic local snapshot | `hourtrail-snapshot-<YYYYMMDDTHHmmssZ>.db` |
-| Pre-restore safety snapshot | `hourtrail-pre-restore-<YYYYMMDDTHHmmssZ>.db` |
+| Runtime database | `timefolio.db` |
+| Portable backup | `timefolio-backup-<YYYYMMDDTHHmmssZ>.timefolio.json` |
+| Monthly timesheet | `timefolio-timesheet-<YYYY-MM>.csv` |
+| Automatic local snapshot | `timefolio-snapshot-<YYYYMMDDTHHmmssZ>.db` |
+| Pre-restore safety snapshot | `timefolio-pre-restore-<YYYYMMDDTHHmmssZ>.db` |
 
-Example portable filename: `hourtrail-backup-20260928T180000Z.hourtrail.json`.
+Example portable filename: `timefolio-backup-20260928T180000Z.timefolio.json`.
 
 Use ASCII names and colon-free UTC timestamps for generated filenames. If a filename already exists, create a unique suffix or ask before replacing it; never silently overwrite an older backup.
 
@@ -145,7 +145,7 @@ Split rows at report/day boundaries when necessary so row totals match the repor
 
 ### Full Portable Backup
 
-The migration file is one UTF-8 JSON document with the compound extension `.hourtrail.json`. Use normal JSON serialization, not evaluated JavaScript. UTF-8, Unicode handling, and numeric-interoperability constraints are defined by RFC 8259. [5]
+The migration file is one UTF-8 JSON document with the compound extension `.timefolio.json`. Use normal JSON serialization, not evaluated JavaScript. UTF-8, Unicode handling, and numeric-interoperability constraints are defined by RFC 8259. [5]
 
 The backup includes all work entries and segments, retained soft-deleted records, pending-review records, timestamps, stable identifiers, and portable preferences. It excludes executable files, SQL scripts, query caches, logs, absolute file paths, local backup locations, device-specific settings, and precomputed report totals as authoritative data.
 
@@ -159,7 +159,7 @@ The following is a structurally illustrative empty backup, not an export of the 
 
 ```json
 {
-  "format": "hourtrail-backup",
+  "format": "timefolio-backup",
   "formatVersion": 1,
   "appVersion": "0.1.0",
   "exportedAt": "2026-09-28T18:00:00.000Z",
@@ -230,7 +230,7 @@ User migration flow:
 
 ```text
 Old computer: finish/review work → Export Full Backup
-Transfer the completed .hourtrail.json file
+Transfer the completed .timefolio.json file
 New computer: install matching OS build → Import Backup → Preview → Restore
 Verify monthly totals and pending items → Continue recording on the new computer
 ```
@@ -242,7 +242,7 @@ Keep the old machine's data and original backup until validation succeeds. Resto
 This is the planned repository layout, not a claim that these source files have already been implemented.
 
 ```text
-hourtrail/
+timefolio/
 ├── README.md
 ├── package.json
 ├── pnpm-lock.yaml
@@ -330,8 +330,8 @@ hourtrail/
 │       └── month_boundaries.rs
 └── tests/
     └── fixtures/
-        ├── valid-backup-v1.hourtrail.json
-        └── invalid-backup-v1.hourtrail.json
+        ├── valid-backup-v1.timefolio.json
+        └── invalid-backup-v1.timefolio.json
 ```
 
 Keep runtime databases, real work records, backups, logs, and export files outside the repository and out of source control. Test fixtures contain synthetic data only. The JSON Schema file validates structure; it does not replace Rust checks for relationships, overlap, or restore safety.

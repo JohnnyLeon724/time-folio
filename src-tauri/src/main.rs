@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use hourtrail::{
+use std::sync::{atomic::Ordering, Arc};
+use tauri::{Emitter, Manager};
+use timefolio::{
     commands::{self, Controller},
     platform,
 };
-use std::sync::{atomic::Ordering, Arc};
-use tauri::{Emitter, Manager};
 fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
@@ -12,7 +12,7 @@ fn main() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            let directory = std::env::var_os("HOURTRAIL_DATA_DIR")
+            let directory = std::env::var_os("TIMEFOLIO_DATA_DIR")
                 .map(std::path::PathBuf::from)
                 .unwrap_or(app.path().app_local_data_dir()?);
             let result = Controller::new(directory.clone());
@@ -43,7 +43,7 @@ fn main() {
             }
         })
         .build(tauri::generate_context!())
-        .expect("HourTrail startup failed; keep existing database and inspect the error");
+        .expect("Timefolio startup failed; keep existing database and inspect the error");
     app.run(|app, event| {
         if let tauri::RunEvent::ExitRequested { api, .. } = event {
             let Some(controller) = app.try_state::<Arc<Controller>>() else {

@@ -3,7 +3,7 @@
   "additionalProperties": false,
   "properties": {
     "format": {
-      "const": "hourtrail-backup"
+      "const": "timefolio-backup"
     },
     "formatVersion": {
       "const": 1
@@ -275,5 +275,5 @@
     "workSegments"
   ],
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "HourTrail portable backup v1"
+  "title": "Timefolio portable backup v1"
 }

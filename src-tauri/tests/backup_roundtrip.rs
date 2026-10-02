@@ -1,11 +1,11 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::Database,
     domain::*,
     services::{backup::*, entries::EntryService, timer::TimerService},
 };
-use std::sync::Arc;
 #[test]
 fn last_export_time_is_read_from_device_metadata() {
     let db = Database::open_memory().unwrap();
@@ -43,7 +43,7 @@ fn portable_roundtrip_preserves_unicode_and_ids() {
 #[test]
 fn reject_duplicate_json_keys() {
     assert!(parse(
-        br#"{"format":"hourtrail-backup","format":"other"}"#,
+        br#"{"format":"timefolio-backup","format":"other"}"#,
         MAX_TIME - 1
     )
     .is_err());
@@ -66,12 +66,12 @@ fn failed_publish_never_overwrites_existing_file() {
 #[test]
 fn sample_files_match_contract() {
     parse(
-        include_bytes!("../../tests/fixtures/valid-backup-v1.hourtrail.json"),
+        include_bytes!("../../tests/fixtures/valid-backup-v1.timefolio.json"),
         MAX_TIME - 1,
     )
     .unwrap();
     assert!(parse(
-        include_bytes!("../../tests/fixtures/invalid-backup-v1.hourtrail.json"),
+        include_bytes!("../../tests/fixtures/invalid-backup-v1.timefolio.json"),
         MAX_TIME - 1
     )
     .is_err());

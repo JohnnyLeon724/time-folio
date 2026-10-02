@@ -1,7 +1,7 @@
 mod common;
 use common::*;
-use hourtrail::{db::Database, domain::*, services::timer::TimerService};
 use std::sync::Arc;
+use timefolio::{db::Database, domain::*, services::timer::TimerService};
 #[test]
 fn full_workday_excludes_lunch_and_stop_releases_slot() {
     let db = Arc::new(Database::open_memory().unwrap());
@@ -46,8 +46,8 @@ fn instant_stop_leaves_review_without_zero_interval() {
 }
 
 fn advance(timer: &TimerService, clock: &TestClock, until: i64) {
-    use hourtrail::platform::clock::Clock;
-    let recovery = hourtrail::services::recovery::RecoveryService::new(timer.clone());
+    use timefolio::platform::clock::Clock;
+    let recovery = timefolio::services::recovery::RecoveryService::new(timer.clone());
     while clock.utc_now() < until {
         clock.set((clock.utc_now() + 15000).min(until));
         recovery.checkpoint().unwrap();

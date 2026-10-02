@@ -52,12 +52,12 @@ export function WorkspaceLayout({
         <SidebarHeader className="px-3 py-5">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" onClick={() => onPage('workspace')} tooltip="HourTrail">
+              <SidebarMenuButton size="lg" onClick={() => onPage('workspace')} tooltip="Timefolio">
                 <span className="brand-mark">
                   <Clock3 />
                 </span>
                 <span className="brand-name">
-                  HourTrail<small>工作时间记录</small>
+                  Timefolio<small>工作时间记录</small>
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>

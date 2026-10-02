@@ -144,7 +144,7 @@ function WorkspaceApp() {
   async function exportCsv() {
     try {
       const destination = await save({
-        defaultPath: `hourtrail-timesheet-${month}.csv`,
+        defaultPath: `timefolio-timesheet-${month}.csv`,
         filters: [{ name: 'CSV 工时表', extensions: ['csv'] }],
       });
       if (!destination) return;
@@ -165,7 +165,7 @@ function WorkspaceApp() {
         {!desktop ? (
           <div className="browser-note">
             <Clock3 size={40} />
-            <h1>HourTrail 桌面工作台</h1>
+            <h1>Timefolio 桌面工作台</h1>
             <p>请启动桌面应用，使用本地计时、日历和备份功能。</p>
           </div>
         ) : query.isPending ? (

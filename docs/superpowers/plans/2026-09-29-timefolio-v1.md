@@ -1,4 +1,4 @@
-# HourTrail V1 Implementation Plan
+# Timefolio V1 Implementation Plan
 
 > 2026-10-03 执行记录：仓库已包含应用实现，当前测试证据、发布构建及剩余验收项见[发布验收记录](../../release-checklist.md)。下文保留原计划；未勾选步骤与文中的初始目录说明不代表当前代码状态，也不代表整项任务已经验收。
 
@@ -10,9 +10,9 @@
 
 **Tech Stack:** Tauri 2、React、TypeScript、Vite、shadcn/ui、Tailwind CSS、TanStack Query、React Hook Form、Zod、rusqlite、SQLite。时间库在任务 1 验证后锁定；不假定操作系统自带时区数据库一致。
 
-**Spec:** [详细设计](../specs/2026-09-29-hourtrail-timer-design.md)及[项目设计](../../PROJECT_DESIGN.md)。详细设计于 2026-09-29 经用户确认。
+**Spec:** [详细设计](../specs/2026-09-29-timefolio-timer-design.md)及[项目设计](../../PROJECT_DESIGN.md)。详细设计于 2026-09-29 经用户确认。
 
-本计划仅定义实施步骤，不代表已创建应用或执行测试。当前目录只有设计文档且不是 Git 仓库。执行时可在本目录初始化 Git，保持现有目录名，产品和包名使用 HourTrail/hourtrail，不自动移动用户目录。
+本计划仅定义实施步骤，不代表已创建应用或执行测试。当前目录只有设计文档且不是 Git 仓库。执行时可在本目录初始化 Git，保持现有目录名，产品和包名使用 Timefolio/timefolio，不自动移动用户目录。
 
 技能说明：上述标准执行技能不在当前可用技能列表中。执行前查找其实际位置；若仍不可用，应明确说明并与用户约定当前会话执行方式，不声称已使用该技能。编写计划本身不依赖这些技能，也不启动子代理。
 
@@ -77,12 +77,12 @@
 
 **Interfaces:** 产出共享 DTO；`validate_entry(input: &EntryDetail, now: EpochMs) -> Result<(), AppError>` 和 `overlaps(a: Interval, b: Interval) -> bool`。建立注入式 `Clock` trait：`utc_now() -> EpochMs`、`monotonic_now() -> std::time::Duration`；后者是本进程相对值。
 
-- [ ] 验证本机 Node、pnpm、Rust、Xcode 工具链，读取所选依赖官方兼容要求并锁定版本；选择支持统一 IANA 数据的 Rust 时间实现，记录版本和时区数据版本。注册永久应用标识 `com.hourtrail.desktop` 为开发候选，发布前核实归属与可持续使用性。
-- [ ] 创建最小 Tauri/React 工程、忽略规则和 Git 仓库；不更名现有目录。配置 `pnpm test`、`pnpm typecheck`、`pnpm build`、`pnpm tauri`，Rust 库名固定为 `hourtrail`。
+- [ ] 验证本机 Node、pnpm、Rust、Xcode 工具链，读取所选依赖官方兼容要求并锁定版本；选择支持统一 IANA 数据的 Rust 时间实现，记录版本和时区数据版本。注册永久应用标识 `com.timefolio.desktop` 为开发候选，发布前核实归属与可持续使用性。
+- [ ] 创建最小 Tauri/React 工程、忽略规则和 Git 仓库；不更名现有目录。配置 `pnpm test`、`pnpm typecheck`、`pnpm build`、`pnpm tauri`，Rust 库名固定为 `timefolio`。
 - [ ] 编写领域测试，关键断言：`assert!(!overlaps(span(0, 10), span(10, 20))); assert!(overlaps(span(0, 11), span(10, 20)));`。span 是测试辅助函数，直接构造 Interval，不调用日期范围验证。另测标题 200/201 个 emoji、空白标题、零长度区间、future end、时间范围边界及 completed 无时段。
 - [ ] 执行 `cargo test --manifest-path src-tauri/Cargo.toml --test domain_validation`，确认缺失领域实现导致失败，再实现验证器和 DTO。
 - [ ] 重跑领域测试及 `pnpm typecheck`、`pnpm build`；实际启动桌面空壳并记录成功。首次可运行外壳可人工验证，不写只验证脚手架存在的测试。
-- [ ] 检查暂存内容后提交：`chore: bootstrap HourTrail and domain validation`。
+- [ ] 检查暂存内容后提交：`chore: bootstrap Timefolio and domain validation`。
 
 ### Task 2: SQLite 事务、单一活动任务与幂等写入
 

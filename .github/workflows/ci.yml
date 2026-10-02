@@ -52,7 +52,7 @@ jobs:
         run: cargo fmt --manifest-path src-tauri/Cargo.toml --check
       - name: Rust tests and synthetic migration export
         env:
-          HOURTRAIL_MIGRATION_OUTPUT: ${{ runner.temp }}/migration.hourtrail.json
+          TIMEFOLIO_MIGRATION_OUTPUT: ${{ runner.temp }}/migration.timefolio.json
         run: cargo test --locked --manifest-path src-tauri/Cargo.toml --target ${{ matrix.target }}
       - name: Rust lint
         run: cargo clippy --locked --manifest-path src-tauri/Cargo.toml --target ${{ matrix.target }} --all-targets -- -D warnings
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: migration-${{ matrix.target }}
-          path: ${{ runner.temp }}/migration.hourtrail.json
+          path: ${{ runner.temp }}/migration.timefolio.json
           if-no-files-found: error
           retention-days: 7
       - name: Keep unsigned installer
@@ -90,13 +90,13 @@ jobs:
         run: rustup toolchain install 1.96.0 --profile minimal
       - name: Restore Windows export and reexport on macOS
         env:
-          HOURTRAIL_MIGRATION_INPUT: ${{ runner.temp }}/incoming/migration.hourtrail.json
-          HOURTRAIL_MIGRATION_OUTPUT: ${{ runner.temp }}/migration.hourtrail.json
+          TIMEFOLIO_MIGRATION_INPUT: ${{ runner.temp }}/incoming/migration.timefolio.json
+          TIMEFOLIO_MIGRATION_OUTPUT: ${{ runner.temp }}/migration.timefolio.json
         run: cargo +1.96.0 test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --test portable_migration
       - uses: actions/upload-artifact@v4
         with:
           name: migration-windows-macos
-          path: ${{ runner.temp }}/migration.hourtrail.json
+          path: ${{ runner.temp }}/migration.timefolio.json
           if-no-files-found: error
           retention-days: 7
 
@@ -115,5 +115,5 @@ jobs:
         run: rustup toolchain install 1.96.0 --profile minimal
       - name: Verify complete Windows to macOS to Windows roundtrip
         env:
-          HOURTRAIL_MIGRATION_INPUT: ${{ runner.temp }}/incoming/migration.hourtrail.json
+          TIMEFOLIO_MIGRATION_INPUT: ${{ runner.temp }}/incoming/migration.timefolio.json
         run: cargo +1.96.0 test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --test portable_migration

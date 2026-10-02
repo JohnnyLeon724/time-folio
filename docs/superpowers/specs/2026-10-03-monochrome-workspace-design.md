@@ -1,4 +1,4 @@
-# HourTrail 黑白工作台设计
+# Timefolio 黑白工作台设计
 
 用户已确认直接实现：浅灰窄侧栏、白色内容区、顶部紧凑计时条、ReUI 月/周/列表日历、右侧编辑与核对面板。基础组件使用 shadcn/ui，日历采用 ReUI Radix Event Calendar。
 

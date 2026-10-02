@@ -1,10 +1,10 @@
 [package]
-name = "hourtrail"
+name = "timefolio"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "hourtrail"
+name = "timefolio"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
@@ -29,7 +29,7 @@ tauri-plugin-dialog = { version = "2", optional = true }
 tauri-plugin-single-instance = { version = "2", optional = true }
 
 [[bin]]
-name = "hourtrail"
+name = "timefolio"
 path = "src/main.rs"
 required-features = ["desktop"]
 

@@ -4,8 +4,8 @@ src-tauri/target/
 *.db
 *.db-shm
 *.db-wal
-*.hourtrail.json
-!tests/fixtures/*.hourtrail.json
+*.timefolio.json
+!tests/fixtures/*.timefolio.json
 *.csv
 *.log
 .DS_Store

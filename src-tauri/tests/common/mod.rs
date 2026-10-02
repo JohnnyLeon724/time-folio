@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use hourtrail::{db::Database, domain::*, platform::clock::Clock};
 use std::{
     sync::{
         atomic::{AtomicI64, Ordering},
@@ -7,6 +6,7 @@ use std::{
     },
     time::Duration,
 };
+use timefolio::{db::Database, domain::*, platform::clock::Clock};
 pub struct TestClock(pub AtomicI64);
 impl TestClock {
     pub fn at(t: i64) -> Arc<Self> {

@@ -9,16 +9,16 @@ use tauri::{
     Emitter, Manager,
 };
 pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "打开 HourTrail", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "打开 Timefolio", true, None::<&str>)?;
     let status = MenuItem::with_id(app, "status", "没有活动任务", false, None::<&str>)?;
     let pause = MenuItem::with_id(app, "pause", "暂停", false, None::<&str>)?;
     let resume = MenuItem::with_id(app, "resume", "继续", false, None::<&str>)?;
     let stop = MenuItem::with_id(app, "stop", "结束并核对", false, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "退出 HourTrail", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "退出 Timefolio", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &status, &pause, &resume, &stop, &quit])?;
     let mut builder = TrayIconBuilder::with_id("main")
         .menu(&menu)
-        .tooltip("HourTrail")
+        .tooltip("Timefolio")
         .on_menu_event(move |app, event| {
             let controller = app.state::<Arc<Controller>>();
             let action = event.id.as_ref();

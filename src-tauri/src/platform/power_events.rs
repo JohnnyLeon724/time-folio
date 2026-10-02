@@ -110,7 +110,7 @@ pub fn install(recovery: Arc<RecoveryService>, app: tauri::AppHandle) {
             DefWindowProcW(hwnd, msg, w, l)
         }
         let _ = CONTEXT.set((recovery, app.clone()));
-        let class: Vec<u16> = "HourTrailPower\0".encode_utf16().collect();
+        let class: Vec<u16> = "TimefolioPower\0".encode_utf16().collect();
         let instance = GetModuleHandleW(std::ptr::null());
         let wc = WNDCLASSW {
             lpfnWndProc: Some(proc),

@@ -76,7 +76,7 @@ it('only updates the last successful external export after the backend succeeds'
   vi.mocked(command).mockImplementation(async (op) =>
     op === 'export_backup' ? { exportedAt: snapshot.createdAt } : [],
   );
-  vi.mocked(save).mockResolvedValue('backup.hourtrail.json');
+  vi.mocked(save).mockResolvedValue('backup.timefolio.json');
   const props = openSettings();
   fireEvent.click(screen.getByRole('button', { name: '选择保存位置' }));
   await waitFor(() => expect(props.notify).toHaveBeenCalledOnce());

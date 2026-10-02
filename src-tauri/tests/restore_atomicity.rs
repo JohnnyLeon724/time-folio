@@ -1,6 +1,7 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::{records, Database},
     domain::*,
     services::{
@@ -8,7 +9,6 @@ use hourtrail::{
         snapshots::SnapshotService, timer::TimerService,
     },
 };
-use std::sync::Arc;
 #[test]
 fn replacement_is_atomic_and_invalidates_old_context() {
     let dir = tempfile::tempdir().unwrap();

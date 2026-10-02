@@ -1,6 +1,24 @@
 # 发布验收记录
 
-HourTrail 尚未完成跨平台发布验收。下表区分自动测试、安装包构建和实机操作；自动测试通过不代表电源、托盘或安装流程已在实机通过。
+Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装包构建和实机操作；自动测试通过不代表电源、托盘或安装流程已在实机通过。
+
+更名前的验收记录保留在后续章节，仅统一名称和文档链接；本次更名的验证证据单独记录如下。
+
+## Timefolio 更名验证（2026-10-03）
+
+验证对象为当前工作区的更名改动，包括应用标识、包名、数据库文件名、备份格式、环境变量和 T 字母图标。
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 前端测试 | `pnpm test` | 10 个测试文件、42 项测试通过 |
+| 类型与生产构建 | `pnpm build` | 通过 |
+| Rust 测试 | `cargo test --locked --manifest-path src-tauri/Cargo.toml` | 43 项通过 |
+| 备份导出与再次导入 | 设置 `TIMEFOLIO_MIGRATION_OUTPUT` 导出，再设置 `TIMEFOLIO_MIGRATION_INPUT`，使用 `--no-default-features --test portable_migration` 验证并再次导出 | 通过，使用 `.timefolio.json` 文件 |
+| 格式与静态分析 | `pnpm format:check`、`cargo fmt --manifest-path src-tauri/Cargo.toml --check`、`cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` | 通过 |
+| 名称和文档链接 | 检查版本控制范围内现存文件及新增文件的内容、文件名和本地 Markdown 链接 | 无旧品牌名残留，无失效本地链接 |
+| Windows NSIS 安装包 | `pnpm exec tauri build --bundles nsis '--' --locked` | 通过，生成 `src-tauri/target/release/bundle/nsis/Timefolio_0.1.0_x64-setup.exe`（3.40 MiB） |
+
+安装包尚未安装运行，macOS 构建和远端 CI 未在本轮执行。构建仍有 Zod 注释、前端分块体积和 `timefolio.pdb` 输出路径冲突警告，均未阻止本轮构建。
 
 ## 黑白工作台界面验收（2026-10-03）
 
@@ -33,17 +51,17 @@ HourTrail 尚未完成跨平台发布验收。下表区分自动测试、安装�
 | Rust 测试 | `cargo test --locked --manifest-path src-tauri/Cargo.toml` | 33 项通过 |
 | Rust 格式 | `cargo fmt --manifest-path src-tauri/Cargo.toml --check` | 通过 |
 | Rust 静态分析 | `cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` | 通过 |
-| Windows NSIS 安装包 | `pnpm exec tauri build --bundles nsis '--' --locked` | 通过，生成 `src-tauri/target/release/bundle/nsis/HourTrail_0.1.0_x64-setup.exe`（3.18 MiB）；尚未安装验收 |
+| Windows NSIS 安装包 | `pnpm exec tauri build --bundles nsis '--' --locked` | 更名前通过，生成 0.1.0 x64 安装包（3.18 MiB）；尚未安装验收 |
 | 迁移文件接口 | 设置输入、输出环境变量运行 `portable_migration`，启用 `--no-default-features` | 本机连续导出、读取再导出通过 |
 | CI 语法与表达式 | `go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7 .github/workflows/ci.yml` | 通过 |
 | macOS arm64 构建及安装 | 需要 macOS 环境 | 未执行 |
 | GitHub Actions | [工作流](../.github/workflows/ci.yml) | 已配置，未在远端执行 |
 
-Cargo 在 Windows 报告库与可执行文件同名导致 `hourtrail.pdb` 输出路径冲突警告。当前构建可继续，发布调试符号前需解决命名冲突。没有配置分发签名或 Apple 公证凭据，安装包不应作为已签名正式版分发。应用标识 `com.hourtrail.desktop` 的归属仍待发布负责人核实。
+更名前的 Windows 构建报告库与可执行文件同名导致调试符号输出路径冲突警告，当时构建可继续；发布调试符号前需重新检查命名冲突。没有配置分发签名或 Apple 公证凭据，安装包不应作为已签名正式版分发。应用标识 `com.timefolio.desktop` 的归属仍待发布负责人核实。
 
 ## 计时验收映射
 
-来源：[详细设计第 10 节](superpowers/specs/2026-09-29-hourtrail-timer-design.md#10-验收与交付顺序)。测试文件均位于 `src-tauri/tests/`，界面测试位于 `src/features/`。
+来源：[详细设计第 10 节](superpowers/specs/2026-09-29-timefolio-timer-design.md#10-验收与交付顺序)。测试文件均位于 `src-tauri/tests/`，界面测试位于 `src/features/`。
 
 | 场景 | 已有自动证据 | 待验收 |
 | --- | --- | --- |
@@ -154,7 +172,7 @@ CSV 可读时间格式见 [README](../README.md#使用方式)。`csv_export.rs` 
 
 ## 自动迁移文件接口
 
-测试使用 [migration-v1.hourtrail.json](../tests/fixtures/migration-v1.hourtrail.json) 合成数据。`HOURTRAIL_MIGRATION_INPUT` 指定待验证的前一平台导出文件，未设置时读取内置样例。`HOURTRAIL_MIGRATION_OUTPUT` 指定一个尚不存在的绝对输出路径，测试成功后以正式备份序列化及原子发布逻辑写出。
+测试使用 [migration-v1.timefolio.json](../tests/fixtures/migration-v1.timefolio.json) 合成数据。`TIMEFOLIO_MIGRATION_INPUT` 指定待验证的前一平台导出文件，未设置时读取内置样例。`TIMEFOLIO_MIGRATION_OUTPUT` 指定一个尚不存在的绝对输出路径，测试成功后以正式备份序列化及原子发布逻辑写出。
 
 ```sh
 cargo test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --test portable_migration

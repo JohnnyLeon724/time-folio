@@ -1,11 +1,11 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::Database,
     domain::*,
     services::{entries::EntryService, timer::TimerService},
 };
-use std::sync::Arc;
 
 #[test]
 fn correcting_a_conflict_checks_other_records_and_ignores_trash() {

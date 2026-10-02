@@ -1,9 +1,9 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::Database, domain::*, platform::lifecycle::LifecycleService, services::timer::TimerService,
 };
-use std::sync::Arc;
 #[test]
 fn quit_guard_and_cancel() {
     let db = Arc::new(Database::open_memory().unwrap());

@@ -1,6 +1,6 @@
-<img src="src-tauri/icons/128x128.png" width="64" alt="HourTrail 图标">
+<img src="src-tauri/icons/128x128.png" width="64" alt="Timefolio 图标">
 
-# HourTrail
+# Timefolio
 
 离线桌面工时记录应用。开始、暂停、继续、结束计时后，核对实际工作时段，再计入月度报告。Rust 和 SQLite 保存工时，React 展示工作台。
 
@@ -47,7 +47,7 @@ pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
 
-`pnpm dev` 仅启动网页，计时和本地数据库功能需要桌面应用。测试独立数据目录可设置 `HOURTRAIL_DATA_DIR`，不要指向正在使用的工作区。
+`pnpm dev` 仅启动网页，计时和本地数据库功能需要桌面应用。测试独立数据目录可设置 `TIMEFOLIO_DATA_DIR`，不要指向正在使用的工作区。
 
 ## 验证与构建
 
@@ -71,8 +71,8 @@ pnpm exec tauri build --bundles nsis '--' --locked
 
 ## 项目资料
 
-- [计时与恢复设计](docs/superpowers/specs/2026-09-29-hourtrail-timer-design.md)
-- [实施计划](docs/superpowers/plans/2026-09-29-hourtrail-v1.md)
+- [计时与恢复设计](docs/superpowers/specs/2026-09-29-timefolio-timer-design.md)
+- [实施计划](docs/superpowers/plans/2026-09-29-timefolio-v1.md)
 - [黑白工作台设计](docs/superpowers/specs/2026-10-03-monochrome-workspace-design.md)
 - [界面重构计划](docs/superpowers/plans/2026-10-03-monochrome-workspace.md)
 - [项目设计与备份合同](docs/PROJECT_DESIGN.md)

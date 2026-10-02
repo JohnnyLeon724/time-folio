@@ -1,9 +1,9 @@
-use hourtrail::{db::Database, services::snapshots::SnapshotService};
 use std::sync::Arc;
+use timefolio::{db::Database, services::snapshots::SnapshotService};
 
 #[test]
 fn automatic_snapshots_throttle_rotate_and_keep_safety_copies() {
-    use hourtrail::{db::records, domain::*, services::recovery::bump};
+    use timefolio::{db::records, domain::*, services::recovery::bump};
     let dir = tempfile::tempdir().unwrap();
     let db = Arc::new(Database::open_memory().unwrap());
     let svc = SnapshotService::new(db.clone(), dir.path().into());

@@ -1,11 +1,11 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::Database,
     domain::*,
     services::{recovery::RecoveryService, timer::TimerService},
 };
-use std::sync::Arc;
 
 #[test]
 fn checkpoint_gap_boundary_requires_review_only_above_sixty_seconds() {
@@ -22,7 +22,7 @@ fn checkpoint_gap_boundary_requires_review_only_above_sixty_seconds() {
         recovery.checkpoint().unwrap();
         clock.set(start + 15000 + gap);
         recovery.checkpoint().unwrap();
-        let entry = db.read(hourtrail::db::records::all).unwrap().remove(0);
+        let entry = db.read(timefolio::db::records::all).unwrap().remove(0);
         if needs_review {
             assert_eq!(entry.status, Status::NeedsReview);
             assert_eq!(entry.duration(), 15000);
@@ -89,7 +89,7 @@ fn reopening_a_disk_workspace_recovers_the_persisted_checkpoint() {
     let recovery = RecoveryService::new(timer.clone());
     recovery.recover_on_startup().unwrap();
     recovery.recover_on_startup().unwrap();
-    let entry = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    let entry = db.read(timefolio::db::records::all).unwrap().remove(0);
     assert_eq!(entry.duration(), 15000);
     assert_eq!(entry.status, Status::NeedsReview);
     assert_eq!(entry.review_items.len(), 1);
@@ -113,7 +113,7 @@ fn sleep_wake_is_review_not_auto_resume() {
     recovery.resume().unwrap();
     recovery.resume().unwrap();
     assert!(timer.state().unwrap().active_entry.is_none());
-    let e = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    let e = db.read(timefolio::db::records::all).unwrap().remove(0);
     assert_eq!(e.status, Status::NeedsReview);
     assert_eq!(e.review_items.len(), 1);
     assert_eq!(e.review_items[0].candidate_end_at, Some(MIN_TIME + 2000));
@@ -130,7 +130,7 @@ fn crash_closes_at_checkpoint_not_restart() {
     recovery.checkpoint().unwrap();
     clock.set(MIN_TIME + 86400000);
     recovery.recover_on_startup().unwrap();
-    let e = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    let e = db.read(timefolio::db::records::all).unwrap().remove(0);
     assert_eq!(e.duration(), 15000);
     assert_eq!(e.review_items[0].reason, "recovery");
     assert_eq!(
@@ -147,7 +147,7 @@ fn backward_clock_creates_review_without_negative_segments() {
     let recovery = RecoveryService::new(timer);
     clock.set(MIN_TIME + 1000);
     recovery.recover_on_startup().unwrap();
-    let e = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    let e = db.read(timefolio::db::records::all).unwrap().remove(0);
     assert!(e.segments.is_empty());
     assert!(e.review_items[0].candidate_end_at < e.review_items[0].candidate_start_at);
 }
@@ -168,16 +168,16 @@ fn imported_open_sleep_is_not_extended_on_startup() {
         resolution: "unresolved".into(),
         resolved_at: None,
     });
-    db.internal(|tx| hourtrail::db::records::put(tx, &e))
+    db.internal(|tx| timefolio::db::records::put(tx, &e))
         .unwrap();
     RecoveryService::new(timer).recover_on_startup().unwrap();
-    assert_eq!(db.read(hourtrail::db::records::all).unwrap()[0], e);
+    assert_eq!(db.read(timefolio::db::records::all).unwrap()[0], e);
 }
 #[test]
 fn pause_cannot_hide_a_clock_jump() {
-    use hourtrail::platform::clock::Clock;
     use std::sync::atomic::{AtomicI64, Ordering};
     use std::time::Duration;
+    use timefolio::platform::clock::Clock;
     struct JumpClock(AtomicI64);
     impl Clock for JumpClock {
         fn utc_now(&self) -> i64 {
@@ -199,7 +199,7 @@ fn pause_cannot_hide_a_clock_jump() {
         timer.pause(ctx(&db, Some(&e)), &e.id).unwrap_err().code,
         "CLOCK_UNCERTAIN"
     );
-    let e = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    let e = db.read(timefolio::db::records::all).unwrap().remove(0);
     assert_eq!(e.status, Status::NeedsReview);
     assert_eq!(e.duration(), 0);
     assert_eq!(e.review_items[0].reason, "clock_change");

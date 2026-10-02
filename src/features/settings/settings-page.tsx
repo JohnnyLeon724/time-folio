@@ -91,8 +91,8 @@ export function SettingsPage({
   }
   async function exportBackup() {
     const path = await save({
-      defaultPath: `hourtrail-backup-${new Date().toISOString().replace(/[-:.]/g, '')}.hourtrail.json`,
-      filters: [{ name: 'HourTrail 备份', extensions: ['json'] }],
+      defaultPath: `timefolio-backup-${new Date().toISOString().replace(/[-:.]/g, '')}.timefolio.json`,
+      filters: [{ name: 'Timefolio 备份', extensions: ['json'] }],
     });
     if (!path) return;
     const result = await command<{ exportedAt: number }>('export_backup', { destination: path });
@@ -103,7 +103,7 @@ export function SettingsPage({
   async function importBackup() {
     const path = await open({
       multiple: false,
-      filters: [{ name: 'HourTrail 备份', extensions: ['json'] }],
+      filters: [{ name: 'Timefolio 备份', extensions: ['json'] }],
     });
     if (!path || Array.isArray(path)) return;
     setPreview(await command<Preview>('inspect_backup', { source: path }));

@@ -1,4 +1,4 @@
-use hourtrail::{
+use timefolio::{
     domain::*,
     services::{csv, reports::report},
 };

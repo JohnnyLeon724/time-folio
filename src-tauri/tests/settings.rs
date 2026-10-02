@@ -1,11 +1,11 @@
 mod common;
 use common::*;
-use hourtrail::{
+use std::sync::Arc;
+use timefolio::{
     db::Database,
     domain::*,
     services::{settings::SettingsService, timer::TimerService},
 };
-use std::sync::Arc;
 #[test]
 fn settings_require_fresh_preview_and_no_active_timer() {
     let db = Arc::new(Database::open_memory().unwrap());

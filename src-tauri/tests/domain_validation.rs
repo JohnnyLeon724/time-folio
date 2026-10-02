@@ -1,4 +1,4 @@
-use hourtrail::domain::*;
+use timefolio::domain::*;
 fn entry() -> EntryDetail {
     EntryDetail::manual(
         "开发登录页".into(),

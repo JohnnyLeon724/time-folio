@@ -1,5 +1,5 @@
 {
-  "format": "hourtrail-backup",
+  "format": "timefolio-backup",
   "formatVersion": 1,
   "appVersion": "0.1.0",
   "exportedAt": "2026-10-02T00:00:00Z",

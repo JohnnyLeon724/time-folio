@@ -128,7 +128,7 @@ fn capture_inner(c: &rusqlite::Connection, allow_active: bool) -> Result<Backup>
         review_items.extend(e.review_items);
     }
     Ok(Backup {
-        format: "hourtrail-backup".into(),
+        format: "timefolio-backup".into(),
         format_version: 1,
         app_version: env!("CARGO_PKG_VERSION").into(),
         exported_at: chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
@@ -154,7 +154,7 @@ pub fn parse(bytes: &[u8], now: i64) -> Result<Backup> {
     Ok(backup)
 }
 pub fn validate(b: &Backup, now: i64) -> Result<()> {
-    if b.format != "hourtrail-backup" || b.format_version != 1 {
+    if b.format != "timefolio-backup" || b.format_version != 1 {
         return Err(AppError::new(
             "UNSUPPORTED_FORMAT",
             "不支持此备份格式，请使用兼容版本",

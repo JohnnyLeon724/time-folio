@@ -1,7 +1,9 @@
 mod common;
 
 use common::*;
-use hourtrail::{
+use serde_json::Value;
+use std::{path::PathBuf, sync::Arc};
+use timefolio::{
     db::{records, Database},
     domain::*,
     services::{
@@ -13,8 +15,6 @@ use hourtrail::{
         timer::TimerService,
     },
 };
-use serde_json::Value;
-use std::{path::PathBuf, sync::Arc};
 
 fn canonical(backup: &Backup) -> Value {
     let mut value = serde_json::to_value(backup).unwrap();
@@ -38,11 +38,11 @@ fn canonical(backup: &Backup) -> Value {
 #[test]
 fn portable_migration_preserves_domain_and_month_totals() {
     let expected = backup::parse(
-        include_bytes!("../../tests/fixtures/migration-v1.hourtrail.json"),
+        include_bytes!("../../tests/fixtures/migration-v1.timefolio.json"),
         MAX_TIME - 1,
     )
     .unwrap();
-    let incoming = match std::env::var_os("HOURTRAIL_MIGRATION_INPUT") {
+    let incoming = match std::env::var_os("TIMEFOLIO_MIGRATION_INPUT") {
         Some(path) => backup::parse(&std::fs::read(path).unwrap(), MAX_TIME - 1).unwrap(),
         None => expected.clone(),
     };
@@ -109,7 +109,7 @@ fn portable_migration_preserves_domain_and_month_totals() {
         canonical(&db.read(backup::capture).unwrap()),
         canonical(&expected)
     );
-    if let Some(path) = std::env::var_os("HOURTRAIL_MIGRATION_OUTPUT") {
+    if let Some(path) = std::env::var_os("TIMEFOLIO_MIGRATION_OUTPUT") {
         backup::atomic_write(
             &PathBuf::from(path),
             &serde_json::to_vec_pretty(&exported).unwrap(),

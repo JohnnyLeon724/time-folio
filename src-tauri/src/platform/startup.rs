@@ -52,7 +52,7 @@ pub fn repair(app: &tauri::AppHandle) -> Result<serde_json::Value> {
     if error.code == "UNSUPPORTED_FORMAT" {
         return Err(error);
     }
-    let path = startup.directory.join("hourtrail.db");
+    let path = startup.directory.join("timefolio.db");
     let preserved = if path.exists() {
         Some(preserve_corrupt(&path)?)
     } else {
