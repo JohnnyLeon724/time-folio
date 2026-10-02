@@ -86,6 +86,16 @@ Cargo 在 Windows 报告库与可执行文件同名导致 `hourtrail.pdb` 输出
 | 源设备路径不回放 | 迁移测试断言目标 `device_settings` 保留 | 不同目录的安装版迁移 |
 | 全流程离线 | 本地服务测试无需网络 | 两平台断网完整操作 |
 
+## 时段编辑与报表组件验收
+
+2026-10-03 在 Windows 本机验证，界面实现提交为 `c3cd6a4`，日期导航提交为 `3158d74`。
+
+- 日期编辑使用 shadcn Calendar、Popover、Select；报告月份使用月份弹层。浏览器示例数据验证了日期选择、键盘修改分钟、时长预览及 800×600 下的弹层布局。
+- 明细使用 TanStack Table 8 与现有 shadcn Table，按日聚合后展开实际时段。选择直接组合是为了复用现有样式和按天分页规则；ReUI DataGrid 同样基于 TanStack，但本功能无需其拖拽、列调整等额外封装。搜索汇总、区间展开和分页已有组件测试。
+- 图表使用 shadcn Chart 与 Recharts，参考 [CC Switch 的图表实现](https://github.com/farion1231/cc-switch/blob/main/src/components/usage/UsageTrendChart.tsx)。浏览器指针操作确认 `2026-10-02` 提示 `07:30:00`，纵轴采用整小时刻度。报表单独加载，构建输出独立报表资源约 410 kB。
+- `pnpm test` 共 19 项通过；类型检查、格式检查、前端构建、Rust release 完整测试、Rust 格式检查及 Clippy 通过。CSV 专项覆盖中文五列表头、毫秒精度、多时段和跨午夜拆分。
+- 截图保存在本地忽略目录 `artifacts/ui-review/`：`report-colors.png`、`time-picker-800.png`、`work-details-800.png`。浏览器使用临时示例数据，没有修改真实工作区；安装版 WebView2、macOS 和表格软件打开 CSV 仍需实机验收。
+
 ## 其他发布门槛
 
 - [ ] 快照第 8 份后轮替、创建失败保留旧快照、安全快照不轮替、一小时节流分别补专项测试。
