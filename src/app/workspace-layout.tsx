@@ -3,7 +3,6 @@ import {
   CalendarDays,
   ChartNoAxesCombined,
   CheckCheck,
-  Clock3,
   HardDrive,
   Settings2,
   Trash2,
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import logoUrl from '../../src-tauri/icons/source.svg';
 
 const pages = [
   { id: 'workspace', title: '工作日历', icon: CalendarDays },
@@ -54,7 +54,7 @@ export function WorkspaceLayout({
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" onClick={() => onPage('workspace')} tooltip="Timefolio">
                 <span className="brand-mark">
-                  <Clock3 />
+                  <img src={logoUrl} alt="" width={32} height={32} />
                 </span>
                 <span className="brand-name">
                   Timefolio<small>工作时间记录</small>

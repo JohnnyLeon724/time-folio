@@ -9,7 +9,8 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listen } from '@tauri-apps/api/event';
 import { save } from '@tauri-apps/plugin-dialog';
-import { CheckCheck, Trash2, Check, Clock3, RotateCcw, AlertTriangle } from 'lucide-react';
+import { CheckCheck, Trash2, Check, RotateCcw, AlertTriangle } from 'lucide-react';
+import logoUrl from '../../src-tauri/icons/source.svg';
 import { Providers } from './providers';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/modal';
@@ -164,7 +165,7 @@ function WorkspaceApp() {
       <div className="page-content">
         {!desktop ? (
           <div className="browser-note">
-            <Clock3 size={40} />
+            <img src={logoUrl} alt="Timefolio Logo" width={64} height={64} className="rounded-xl" />
             <h1>Timefolio 桌面工作台</h1>
             <p>请启动桌面应用，使用本地计时、日历和备份功能。</p>
           </div>
