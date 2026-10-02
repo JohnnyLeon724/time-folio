@@ -7,6 +7,20 @@ use hourtrail::{
 };
 use std::sync::Arc;
 #[test]
+fn last_export_time_is_read_from_device_metadata() {
+    let db = Database::open_memory().unwrap();
+    assert_eq!(db.read(last_export_at).unwrap(), None);
+    db.internal(|tx| {
+        tx.execute(
+            "INSERT INTO device_settings(key,value) VALUES('last_export',?1)",
+            ["1790960400000"],
+        )?;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(db.read(last_export_at).unwrap(), Some(1790960400000));
+}
+#[test]
 fn portable_roundtrip_preserves_unicode_and_ids() {
     let db = Arc::new(Database::open_memory().unwrap());
     let clock = TestClock::at(MIN_TIME + 10000);

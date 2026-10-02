@@ -85,7 +85,7 @@ impl Controller {
                     workspace_revision: crate::db::meta(c, "mutation_revision")?,
                     storage_error: self.timer.storage_error.lock().unwrap().clone(),
                 };
-                Ok(json!({"timer":timer,"entries":entries,"settings":crate::db::settings(c)?}))
+                Ok(json!({"timer":timer,"entries":entries,"settings":crate::db::settings(c)?,"lastExportAt":backup::last_export_at(c)?}))
             }),
             "get_timer_state" => Ok(serde_json::to_value(self.timer.state()?)?),
             "start_timer" => Ok(serde_json::to_value(self.timer.start(
@@ -158,8 +158,9 @@ impl Controller {
                 backup::parse(&bytes, self.timer.clock.utc_now())?;
                 let path = PathBuf::from(text("destination")?);
                 backup::atomic_write(&path, &bytes)?;
-                self.timer.db.internal(|tx|{tx.execute("INSERT INTO device_settings VALUES('last_export',?1) ON CONFLICT(key) DO UPDATE SET value=excluded.value",[self.timer.clock.utc_now().to_string()])?;Ok(())})?;
-                Ok(json!({"path":path}))
+                let exported_at = self.timer.clock.utc_now();
+                self.timer.db.internal(|tx|{tx.execute("INSERT INTO device_settings VALUES('last_export',?1) ON CONFLICT(key) DO UPDATE SET value=excluded.value",[exported_at.to_string()])?;Ok(())})?;
+                Ok(json!({"path":path,"exportedAt":exported_at}))
             }
             "export_month_csv" => {
                 let report = self.timer.db.read(|c| {

@@ -41,6 +41,7 @@ export interface TimerState {
   storageError: string | null;
 }
 export interface Workspace {
+  lastExportAt?: number | null;
   entries: Entry[];
   settings: Settings;
   timer: TimerState;

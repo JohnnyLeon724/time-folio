@@ -4,7 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialogCancel } from '@/components/ui/alert-dialog';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { Download, Upload, Database, Globe, ShieldCheck, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -44,17 +44,40 @@ export function SettingsPage({
     [confirmed, setConfirmed] = useState(false),
     [snapshots, setSnapshots] = useState<Snapshot[]>([]),
     [deleting, setDeleting] = useState<Snapshot | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(true);
+  const [snapshotError, setSnapshotError] = useState('');
+  const [lastExportAt, setLastExportAt] = useState(workspace.lastExportAt ?? null);
+  const snapshotRequest = useRef(0);
+  useEffect(() => {
+    setLastExportAt(workspace.lastExportAt ?? null);
+  }, [workspace.lastExportAt]);
   const context = (): Context => ({
     requestId: crypto.randomUUID(),
     workspaceRevision: workspace.timer.workspaceRevision,
     expectedEntryVersion: null,
   });
   async function refreshSnapshots() {
-    setSnapshots(await command<Snapshot[]>('list_local_snapshots'));
+    const request = ++snapshotRequest.current;
+    setSnapshotLoading(true);
+    setSnapshotError('');
+    try {
+      const list = await command<Snapshot[]>('list_local_snapshots');
+      if (request === snapshotRequest.current) setSnapshots(list);
+    } catch (error) {
+      if (request === snapshotRequest.current) setSnapshotError((error as AppError).message);
+    } finally {
+      if (request === snapshotRequest.current) setSnapshotLoading(false);
+    }
   }
   useEffect(() => {
-    void refreshSnapshots().catch(() => {});
-  }, []);
+    void refreshSnapshots();
+    const refresh = () => void refreshSnapshots();
+    window.addEventListener('focus', refresh);
+    return () => {
+      snapshotRequest.current++;
+      window.removeEventListener('focus', refresh);
+    };
+  }, [workspace.timer.workspaceRevision]);
   async function task(fn: () => Promise<void>) {
     setBusy(true);
     setError('');
@@ -72,7 +95,9 @@ export function SettingsPage({
       filters: [{ name: 'HourTrail 备份', extensions: ['json'] }],
     });
     if (!path) return;
-    await command('export_backup', { destination: path });
+    const result = await command<{ exportedAt: number }>('export_backup', { destination: path });
+    setLastExportAt(result.exportedAt);
+    onChanged();
     notify(`完整备份已保存：${path}`);
   }
   async function importBackup() {
@@ -165,6 +190,12 @@ export function SettingsPage({
                   <Download size={23} />
                   <h3>导出完整备份</h3>
                   <p>
+                    {lastExportAt == null
+                      ? '尚无成功导出记录'
+                      : `最近成功导出：${new Date(lastExportAt).toLocaleString('zh-CN')}`}
+                  </p>
+                  <p>保存到你选择的位置，与本地快照分开管理。</p>
+                  <p>
                     {workspace.entries.length} 条记录 ·{' '}
                     {workspace.entries.reduce((n, e) => n + e.segments.length, 0)} 个时段
                   </p>
@@ -219,37 +250,66 @@ export function SettingsPage({
                 </Button>
               </div>
               <div className="snapshot-list">
-                {snapshots.map((s) => (
-                  <div className="snapshot-row" key={s.id}>
-                    <div>
-                      <strong>{s.kind === 'pre-restore' ? '恢复前安全快照' : '本地快照'}</strong>
-                      <span>{new Date(s.createdAt).toLocaleString('zh-CN')}</span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() =>
-                        void task(async () => {
-                          setPreview(await command('inspect_local_snapshot', { id: s.id }));
-                          setConfirmed(false);
-                        })
-                      }
-                    >
-                      预览恢复
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      disabled={busy}
-                      aria-label="删除快照"
-                      onClick={() => setDeleting(s)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                ))}
-                {!snapshots.length && <p className="muted">有工作记录后，会自动创建安全快照。</p>}
+                {snapshotLoading ? (
+                  <p role="status" className="muted">
+                    正在读取快照…
+                  </p>
+                ) : snapshotError ? (
+                  <Alert variant="destructive">
+                    <AlertTitle>无法读取本地快照</AlertTitle>
+                    <AlertDescription className="flex flex-col items-start gap-2">
+                      {snapshotError}
+                      <Button variant="outline" size="sm" onClick={() => void refreshSnapshots()}>
+                        重试读取快照
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <>
+                    {snapshots.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        最近本地快照：
+                        {new Date(Math.max(...snapshots.map((s) => s.createdAt))).toLocaleString(
+                          'zh-CN',
+                        )}{' '}
+                        · 仅保存在本机
+                      </p>
+                    )}
+                    {snapshots.map((s) => (
+                      <div className="snapshot-row" key={s.id}>
+                        <div>
+                          <strong>
+                            {s.kind === 'pre-restore' ? '恢复前安全快照' : '本地快照'}
+                          </strong>
+                          <span>{new Date(s.createdAt).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={busy}
+                          onClick={() =>
+                            void task(async () => {
+                              setPreview(await command('inspect_local_snapshot', { id: s.id }));
+                              setConfirmed(false);
+                            })
+                          }
+                        >
+                          预览恢复
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={busy}
+                          aria-label="删除快照"
+                          onClick={() => setDeleting(s)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                    {!snapshots.length && <p className="muted">暂无本地快照</p>}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

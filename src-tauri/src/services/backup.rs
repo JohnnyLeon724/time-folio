@@ -2,6 +2,7 @@ use crate::{
     db::{meta, records, settings},
     domain::*,
 };
+use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
@@ -9,6 +10,18 @@ use std::{
     io::Write,
     path::Path,
 };
+pub fn last_export_at(c: &rusqlite::Connection) -> Result<Option<i64>> {
+    let value: Option<String> = c
+        .query_row(
+            "SELECT value FROM device_settings WHERE key='last_export'",
+            [],
+            |r| r.get(0),
+        )
+        .optional()?;
+    Ok(value
+        .and_then(|v| v.parse::<i64>().ok())
+        .filter(|v| validation::valid_time(*v)))
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PortableEntry {
