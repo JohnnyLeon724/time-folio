@@ -27,7 +27,14 @@ import { EventCalendarContent } from '@/components/reui/event-calendar/event-cal
 import { localDate, duration, statusText, time } from '@/lib/format';
 import { toCalendarEvents } from './calendar-adapter';
 import { calendarChinese } from './calendar-locale';
-import type { Entry, Report } from '@/services/types';
+import type { Entry, Report, Status } from '@/services/types';
+
+const statusColors: Record<Status, string> = {
+  completed: 'var(--work-completed)',
+  running: 'var(--work-running)',
+  paused: 'var(--work-paused)',
+  needs_review: 'var(--work-review)',
+};
 
 type View = 'month' | 'week' | 'agenda';
 export function WorkCalendar({
@@ -70,7 +77,7 @@ export function WorkCalendar({
         title: `${event.title} · ${statusText[event.status]}`,
         start: new Date(event.start),
         end: new Date(event.end),
-        color: event.status === 'completed' ? '#525252' : '#a3a3a3',
+        color: statusColors[event.status],
         draggable: false,
         resizable: false,
         data: { entryId: event.entryId, status: event.status },
@@ -175,10 +182,15 @@ export function WorkCalendar({
       </EventCalendar>
       <footer className="calendar-footer">
         <span className="calendar-legend">
-          <CircleCheck className="size-3" />
-          已完成
-          <CircleDashed className="size-3" />
-          待核对 / 活动记录
+          {(Object.keys(statusColors) as Status[]).map((status) => (
+            <span key={status} className="inline-flex items-center gap-1.5">
+              <span
+                className="size-2 rounded-full"
+                style={{ backgroundColor: statusColors[status] }}
+              />
+              {statusText[status]}
+            </span>
+          ))}
         </span>
         <span>
           {report

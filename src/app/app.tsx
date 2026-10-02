@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/empty-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listen } from '@tauri-apps/api/event';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -16,12 +16,16 @@ import { Modal } from '../components/modal';
 import { TimerCard } from '../features/timer/timer-card';
 import { WorkCalendar } from '../features/calendar/work-calendar';
 import { EntrySheet } from '../features/entries/entry-sheet';
-import { MonthlyReport } from '../features/reports/monthly-report-page';
 import { SettingsPage } from '../features/settings/settings-page';
 import { command, desktop } from '../services/client';
 import type { Workspace, Entry, Report, Context, Mutation, AppError } from '../services/types';
 import { duration, localDate, statusText } from '../lib/format';
 import '../styles.css';
+const MonthlyReport = lazy(() =>
+  import('../features/reports/monthly-report-page').then((module) => ({
+    default: module.MonthlyReport,
+  })),
+);
 export default function App() {
   return (
     <Providers>
@@ -240,11 +244,13 @@ function WorkspaceApp() {
                     <MonthPicker value={month} onChange={setMonth} />
                   </div>
                   {report.data ? (
-                    <MonthlyReport
-                      report={report.data}
-                      onExport={() => void exportCsv()}
-                      onEdit={edit}
-                    />
+                    <Suspense fallback={<Skeleton className="h-[480px] w-full" />}>
+                      <MonthlyReport
+                        report={report.data}
+                        onExport={() => void exportCsv()}
+                        onEdit={edit}
+                      />
+                    </Suspense>
                   ) : (
                     <Skeleton className="h-[480px] w-full" />
                   )}

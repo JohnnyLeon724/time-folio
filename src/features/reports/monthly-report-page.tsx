@@ -1,3 +1,4 @@
+import { DailyDurationChart } from './daily-duration-chart';
 import { Card, CardContent } from '@/components/ui/card';
 import { WorkDetailsTable } from './work-details-table';
 
@@ -14,7 +15,6 @@ export function MonthlyReport({
   onExport: () => void;
   onEdit: (id: string) => void;
 }) {
-  const max = Math.max(8 * 3600000, ...report.days.map((d) => d.durationMs));
   return (
     <>
       <div className="report-heading">
@@ -57,19 +57,7 @@ export function MonthlyReport({
           </CardContent>
         </Card>
       </div>
-      <section className="report-chart">
-        <h2>每天的投入</h2>
-        <div className="bar-chart">
-          {report.days.map((d) => (
-            <div className="bar-column" key={d.date} title={`${d.date}：${duration(d.durationMs)}`}>
-              <div className="bar-track">
-                <div className="bar" style={{ height: `${(100 * d.durationMs) / max}%` }} />
-              </div>
-              <span>{Number(d.date.slice(8))}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <DailyDurationChart days={report.days} />
       <WorkDetailsTable
         key={report.month}
         rows={report.rows}
