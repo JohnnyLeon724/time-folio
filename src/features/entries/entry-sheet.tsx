@@ -70,10 +70,13 @@ export function EntrySheet({
       : [{ id: crypto.randomUUID(), start: `${date}T09:00:00`, end: `${date}T10:00:00` }],
   );
   const [reviews, setReviews] = useState(entry?.reviewItems ?? []);
+  const initialPeriods = useRef(JSON.stringify({ rows, reviews })).current;
+  const saving = useRef(false);
   const [previewMs, setPreviewMs] = useState<number | null>(null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [deleteConfirm, setDeleteConfirm] = useState(false),
+    [discardConfirm, setDiscardConfirm] = useState(false),
     [ambiguity, setAmbiguity] = useState<{
       id: string;
       field: 'start' | 'end';
@@ -90,6 +93,16 @@ export function EntrySheet({
   });
   const active = entry?.status === 'running' || entry?.status === 'paused';
   const review = entry?.status === 'needs_review';
+  function requestClose() {
+    if (saving.current || deleteConfirm || discardConfirm) return;
+    const form = getValues();
+    const changed =
+      form.title !== (entry?.title ?? '') ||
+      form.note !== (entry?.note ?? '') ||
+      JSON.stringify({ rows, reviews }) !== initialPeriods;
+    if (changed) setDiscardConfirm(true);
+    else onClose();
+  }
   function change(id: string, field: 'start' | 'end', value: string) {
     setRows((old) =>
       old.map((r) => (r.id === id ? { ...r, [field]: value, [`${field}Offset`]: undefined } : r)),
@@ -143,6 +156,8 @@ export function EntrySheet({
     };
   }, [rows, zone]);
   async function save(continueTimer = false) {
+    if (saving.current) return;
+    saving.current = true;
     setBusy(true);
     setError('');
     try {
@@ -184,6 +199,7 @@ export function EntrySheet({
     } catch (e) {
       setError((e as AppError).message);
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   }
@@ -218,6 +234,8 @@ export function EntrySheet({
     }
   }
   async function remove() {
+    if (saving.current) return;
+    saving.current = true;
     setBusy(true);
     try {
       await command('delete_entry', {
@@ -228,6 +246,7 @@ export function EntrySheet({
     } catch (e) {
       setError((e as AppError).message);
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   }
@@ -236,9 +255,7 @@ export function EntrySheet({
       side
       title={entry ? (review ? '核对这段工作' : '工作记录') : '补录工作'}
       description={`所有时间均使用 ${zone}。${entry ? statusText[entry.status] : '保存后计入正式报表。'}`}
-      onClose={() => {
-        if (!busy) onClose();
-      }}
+      onClose={requestClose}
     >
       <form onSubmit={handleSubmit(() => save())} className="entry-form">
         <Field>
@@ -398,7 +415,7 @@ export function EntrySheet({
             </Button>
           )}
           <div className="spacer" />
-          <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
+          <Button type="button" variant="secondary" disabled={busy} onClick={requestClose}>
             {review ? '稍后核对' : '取消'}
           </Button>
           {review && !hasActive && (
@@ -416,6 +433,21 @@ export function EntrySheet({
           </Button>
         </footer>
       </form>
+      {discardConfirm && (
+        <Modal
+          confirmation
+          title="放弃未保存的修改？"
+          description="修改尚未保存。继续编辑可保留当前标题、时段和核对选项。"
+          onClose={() => setDiscardConfirm(false)}
+        >
+          <div className="modal-footer">
+            <AlertDialogCancel onClick={() => setDiscardConfirm(false)}>继续编辑</AlertDialogCancel>
+            <Button variant="destructive" onClick={onClose}>
+              放弃修改
+            </Button>
+          </div>
+        </Modal>
+      )}
       {deleteConfirm && (
         <Modal
           confirmation
