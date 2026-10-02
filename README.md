@@ -13,6 +13,8 @@
 3. 结束后核对时段并确认完成。关闭核对面板会保留待核对记录，这些记录暂不计入正式报告。
 4. 在月度报告查看已确认工时，导出 CSV 工时表。
 
+工作日历提供月、周和列表视图。周视图按实际时段展示，午休等间隔保持空白；点击记录打开右侧详情，修改时间后保存。日历拖动不会修改工时。设置页的「常规」用于统计时区，「备份与数据」用于导入、导出和安全快照。
+
 关闭窗口会尝试隐藏到托盘，后台计时继续。退出应用使用托盘退出入口。休眠或异常中断后的记录需要核对，唤醒不会自动开始计时。
 
 「设置与数据」提供完整备份、恢复预览和本地快照。迁移前先结束活动计时，导出完整 JSON 备份，在另一台设备预览后确认替换。恢复会替换当前工作区，恢复前先创建安全快照；CSV 仅用于工时表，不能恢复工作区。
@@ -63,8 +65,12 @@ pnpm exec tauri build --bundles nsis '--' --locked
 
 - [计时与恢复设计](docs/superpowers/specs/2026-09-29-hourtrail-timer-design.md)
 - [实施计划](docs/superpowers/plans/2026-09-29-hourtrail-v1.md)
+- [黑白工作台设计](docs/superpowers/specs/2026-10-03-monochrome-workspace-design.md)
+- [界面重构计划](docs/superpowers/plans/2026-10-03-monochrome-workspace.md)
 - [项目设计与备份合同](docs/PROJECT_DESIGN.md)
 - [发布验收记录与未完成项](docs/release-checklist.md)
 - [可移植备份 schema](schemas/backup-v1.schema.json)
 
 历史设计中的计划步骤不代表已完成验收；当前证据统一记录在发布验收记录中。
+
+界面组件通过 shadcn CLI 从官方 registry 拉取，使用 `radix-nova` 风格；日历源码来自 ReUI Event Calendar。对应 MIT 声明保存在 [shadcn 许可证](licenses/shadcn-MIT.txt)和 [ReUI 许可证](licenses/reui-MIT.txt)。
