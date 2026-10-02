@@ -5,6 +5,10 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   plugins: [react(), tailwindcss()],
-  server: { port: 1420, strictPort: true },
+  server: {
+    port: 1420,
+    strictPort: true,
+    watch: { ignored: ['**/src-tauri/**', '**/artifacts/**'] },
+  },
   test: { environment: 'jsdom', setupFiles: ['./src/test-setup.ts'] },
 });
