@@ -51,12 +51,12 @@ Cargo 在 Windows 报告库与可执行文件同名导致 `hourtrail.pdb` 输出
 | 关窗后台运行、窗口与托盘一致 | `lifecycle.rs` 覆盖隐藏条件 | 两平台隐藏 20 分钟后重开 |
 | 窗口与托盘同时操作 | `mutations.rs` 覆盖数据库单一活动约束 | 两入口实际竞争操作 |
 | 休眠、唤醒、重复通知 | `recovery.rs` 覆盖不自动恢复和重复事件 | 两平台真实睡眠与唤醒 |
-| 电源漏报、61 秒缺口 | 服务已实现 | 独立阈值测试和实机验证 |
-| 暂停后休眠 | 状态机已有暂停状态 | 增加专项测试及实机证据 |
-| 崩溃隔天恢复 | `recovery.rs` 覆盖检查点截断 | 异常终止进程后重开 |
+| 电源漏报、61 秒缺口 | `recovery.rs` 覆盖 60 秒与 61 秒阈值边界 | 真实电源事件漏报和检查点触发 |
+| 暂停后休眠 | `recovery.rs` 覆盖暂停期间不计时、不自动恢复 | 两平台真实暂停后休眠 |
+| 崩溃隔天恢复 | `recovery.rs` 覆盖临时磁盘数据库重开、检查点截断及重复恢复 | 异常终止进程后重开 |
 | 时钟回拨 | `recovery.rs` 覆盖无负区间 | 受控环境实机验证 |
 | 结束后关闭核对面板 | `entry_review.rs` 覆盖持久化状态 | 界面关闭后重开 |
-| 核对时间重叠 | `entry_review.rs` | 界面冲突定位 |
+| 核对时间重叠 | `entry_review.rs`、`entry-sheet.test.tsx`；浏览器冲突定位见下节 | 安装版冲突查看和修正 |
 | 删除后找回冲突 | `entry_review.rs` | 回收站完整操作 |
 | 写入失败、响应丢失 | `mutations.rs`、`timer_transitions.rs` | 磁盘满及界面请求超时专项测试 |
 | 核对记录可移植 | `portable_migration.rs` | 远端跨平台链及安装版迁移 |
@@ -95,6 +95,25 @@ Cargo 在 Windows 报告库与可执行文件同名导致 `hourtrail.pdb` 输出
 - 图表使用 shadcn Chart 与 Recharts，参考 [CC Switch 的图表实现](https://github.com/farion1231/cc-switch/blob/main/src/components/usage/UsageTrendChart.tsx)。浏览器指针操作确认 `2026-10-02` 提示 `07:30:00`，纵轴采用整小时刻度。报表单独加载，构建输出独立报表资源约 410 kB。
 - `pnpm test` 共 19 项通过；类型检查、格式检查、前端构建、Rust release 完整测试、Rust 格式检查及 Clippy 通过。CSV 专项覆盖中文五列表头、毫秒精度、多时段和跨午夜拆分。
 - 截图保存在本地忽略目录 `artifacts/ui-review/`：`report-colors.png`、`time-picker-800.png`、`work-details-800.png`。浏览器使用临时示例数据，没有修改真实工作区；安装版 WebView2、macOS 和表格软件打开 CSV 仍需实机验收。
+
+## 编辑安全与冲突定位验收（2026-10-03）
+
+功能证据对应 `4172a93` 和 `bdb9285`，恢复测试对应 `2171713`。面板行为已通过组件测试与浏览器合成数据检查，桌面实机验收仍待执行。
+
+| 检查 | 证据 | 结果 |
+| --- | --- | --- |
+| 前端回归 | `pnpm test` | 8 个测试文件、30 项通过，其中编辑面板 11 项 |
+| 类型与构建 | `pnpm build` | 通过；仍有 Zod 注释和主资源超过 500 kB 的提示 |
+| 前端格式 | `pnpm format:check` | 通过 |
+| Rust 核心回归 | `cargo test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --tests --quiet` | 39 项通过，未启用桌面运行时 |
+| Rust 格式 | `cargo fmt --manifest-path src-tauri/Cargo.toml --check` | 通过 |
+| 桌面目标静态分析 | `cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings` | 通过，启用默认桌面功能 |
+| 未保存保护 | `entry-sheet.test.tsx`；浏览器取消、遮罩操作 | 未改动和改回原值可直接关闭；改动后默认聚焦“继续编辑”；失败保留草稿，保存期间禁止关闭和重复提交 |
+| 冲突定位 | `entry_review.rs`、`entry-sheet.test.tsx` | 外部冲突和内部重叠定位到具体时段；同名任务按 ID 区分；详情读取失败可重试；移除冲突时段后可保存 |
+| 跨午夜与详情返回 | 浏览器合成数据 | 完整日期和时间清晰显示，冲突提示获得焦点；只读详情返回后标题输入保留，焦点回到查看按钮 |
+| 恢复边界 | `recovery.rs` | 60 秒缺口不触发核对，61 秒触发；暂停后休眠不累计、不恢复；临时 SQLite 文件重开仅保留检查点工时，重复恢复不重复创建核对项 |
+
+浏览器截图位于本地忽略目录 `artifacts/ui-review/entry-conflict.png` 和 `artifacts/ui-review/unsaved-changes.png`。临时预览入口已移除，未操作用户真实记录。磁盘重开测试模拟服务重建，不代表已验证进程被强制终止或系统真实休眠。安装版 WebView2、托盘、系统电源事件和 macOS 仍待实机验收。
 
 ## 其他发布门槛
 
