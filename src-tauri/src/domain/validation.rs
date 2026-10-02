@@ -58,7 +58,9 @@ pub fn validate_entry(e: &EntryDetail, now: i64) -> Result<()> {
                 (a.start_at, a.end_at.unwrap_or(i64::MAX)),
                 (b.start_at, b.end_at.unwrap_or(i64::MAX)),
             ) {
-                return Err(fail("同一记录中的工作时段不能重叠"));
+                let mut err = fail("同一记录中的工作时段不能重叠");
+                err.details = serde_json::json!({"segmentId":a.id,"conflictingSegmentId":b.id,"entryId":e.id,"title":e.title,"startAt":b.start_at,"endAt":b.end_at});
+                return Err(err);
             }
         }
     }
@@ -108,7 +110,7 @@ pub fn validate_conflicts(entry: &EntryDetail, others: &[EntryDetail]) -> Result
                 ) {
                     let mut err =
                         AppError::new("OVERLAP", format!("与「{}」的工作时间重叠", other.title));
-                    err.details = serde_json::json!({"entryId":other.id,"startAt":b.start_at,"endAt":b.end_at});
+                    err.details = serde_json::json!({"segmentId":a.id,"conflictingSegmentId":b.id,"entryId":other.id,"title":other.title,"startAt":b.start_at,"endAt":b.end_at});
                     return Err(err);
                 }
             }

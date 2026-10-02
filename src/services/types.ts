@@ -57,7 +57,15 @@ export interface Mutation<T> {
 export interface AppError {
   code: string;
   message: string;
-  details?: { offsets?: number[]; entryId?: string };
+  details?: {
+    offsets?: number[];
+    entryId?: string;
+    segmentId?: string;
+    conflictingSegmentId?: string;
+    title?: string;
+    startAt?: number;
+    endAt?: number | null;
+  };
   retryable?: boolean;
 }
 export interface Report {

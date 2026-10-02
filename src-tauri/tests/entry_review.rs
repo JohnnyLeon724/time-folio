@@ -6,6 +6,48 @@ use hourtrail::{
     services::{entries::EntryService, timer::TimerService},
 };
 use std::sync::Arc;
+
+#[test]
+fn conflict_details_identify_the_exact_period_among_same_named_entries() {
+    let db = Arc::new(Database::open_memory().unwrap());
+    let clock = TestClock::at(MIN_TIME + 10000);
+    let svc = EntryService::new(TimerService::new(db.clone(), clock));
+    let other = EntryDetail::manual(
+        "同名任务".into(),
+        vec![WorkSegment::closed("", MIN_TIME + 4000, MIN_TIME + 6000)],
+    );
+    let other = svc.save(ctx(&db, None), other).unwrap().value;
+    let draft = EntryDetail::manual(
+        "同名任务".into(),
+        vec![
+            WorkSegment::closed("", MIN_TIME, MIN_TIME + 1000),
+            WorkSegment::closed("", MIN_TIME + 5000, MIN_TIME + 7000),
+        ],
+    );
+    let period_id = draft.segments[1].id.clone();
+    let error = svc.save(ctx(&db, None), draft).unwrap_err();
+    assert_eq!(error.code, "OVERLAP");
+    assert_eq!(error.details["segmentId"], period_id);
+    assert_eq!(error.details["entryId"], other.id);
+    assert_eq!(error.details["title"], "同名任务");
+    assert_eq!(error.details["startAt"], MIN_TIME + 4000);
+    assert_eq!(error.details["endAt"], MIN_TIME + 6000);
+}
+
+#[test]
+fn internal_overlap_identifies_both_draft_periods() {
+    let draft = EntryDetail::manual(
+        "开发".into(),
+        vec![
+            WorkSegment::closed("", MIN_TIME, MIN_TIME + 3000),
+            WorkSegment::closed("", MIN_TIME + 2000, MIN_TIME + 4000),
+        ],
+    );
+    let error = validation::validate_entry(&draft, MIN_TIME + 10000).unwrap_err();
+    assert_eq!(error.details["segmentId"], draft.segments[0].id);
+    assert_eq!(error.details["conflictingSegmentId"], draft.segments[1].id);
+    assert_eq!(error.details["entryId"], draft.id);
+}
 #[test]
 fn review_completion_and_conflict_restore() {
     let db = Arc::new(Database::open_memory().unwrap());

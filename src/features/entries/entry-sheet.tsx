@@ -15,6 +15,8 @@ import { Button } from '../../components/ui/button';
 import { command } from '../../services/client';
 import type { Entry, Context, AppError, Mutation } from '../../services/types';
 import { duration, localInput, statusText } from '../../lib/format';
+import { cn } from 'cn';
+import { ConflictRecordDialog } from './conflict-record-dialog';
 const schema = z.object({
   title: z
     .string()
@@ -32,6 +34,15 @@ interface Row {
   originalEnd?: number | null;
   startOffset?: number;
   endOffset?: number;
+}
+interface Conflict {
+  entryId: string;
+  segmentId: string;
+  conflictingSegmentId?: string;
+  title: string;
+  startAt: number;
+  endAt: number | null;
+  snapshot: string;
 }
 export function EntrySheet({
   entry,
@@ -73,6 +84,9 @@ export function EntrySheet({
   const initialPeriods = useRef(JSON.stringify({ rows, reviews })).current;
   const saving = useRef(false);
   const [previewMs, setPreviewMs] = useState<number | null>(null);
+  const [conflict, setConflict] = useState<Conflict | null>(null);
+  const [viewConflict, setViewConflict] = useState(false);
+  const conflictNotice = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [deleteConfirm, setDeleteConfirm] = useState(false),
@@ -94,7 +108,7 @@ export function EntrySheet({
   const active = entry?.status === 'running' || entry?.status === 'paused';
   const review = entry?.status === 'needs_review';
   function requestClose() {
-    if (saving.current || deleteConfirm || discardConfirm) return;
+    if (saving.current || deleteConfirm || discardConfirm || viewConflict) return;
     const form = getValues();
     const changed =
       form.title !== (entry?.title ?? '') ||
@@ -103,6 +117,19 @@ export function EntrySheet({
     if (changed) setDiscardConfirm(true);
     else onClose();
   }
+  useEffect(() => {
+    if (conflict && conflict.snapshot !== JSON.stringify(rows)) {
+      setConflict(null);
+      setError('');
+      setViewConflict(false);
+    }
+  }, [rows, conflict]);
+  useEffect(() => {
+    if (conflict) {
+      conflictNotice.current?.scrollIntoView?.({ block: 'nearest' });
+      conflictNotice.current?.focus();
+    }
+  }, [conflict]);
   function change(id: string, field: 'start' | 'end', value: string) {
     setRows((old) =>
       old.map((r) => (r.id === id ? { ...r, [field]: value, [`${field}Offset`]: undefined } : r)),
@@ -160,6 +187,8 @@ export function EntrySheet({
     saving.current = true;
     setBusy(true);
     setError('');
+    setConflict(null);
+    setViewConflict(false);
     try {
       const form = getValues();
       const segments = active
@@ -197,7 +226,26 @@ export function EntrySheet({
       });
       onSaved(result.value);
     } catch (e) {
-      setError((e as AppError).message);
+      const err = e as AppError;
+      setError(err.message);
+      const details = err.details;
+      if (
+        (err.code === 'OVERLAP' || err.code === 'VALIDATION') &&
+        details?.segmentId &&
+        details.entryId &&
+        typeof details.startAt === 'number' &&
+        details.endAt !== undefined
+      ) {
+        setConflict({
+          segmentId: details.segmentId,
+          conflictingSegmentId: details.conflictingSegmentId,
+          entryId: details.entryId,
+          title: details.title ?? '已有任务',
+          startAt: details.startAt,
+          endAt: details.endAt,
+          snapshot: JSON.stringify(rows),
+        });
+      }
     } finally {
       saving.current = false;
       setBusy(false);
@@ -290,7 +338,16 @@ export function EntrySheet({
         </div>
         {!rows.length && <p className="muted">尚无有效时段，请补充时间，或删除这条记录。</p>}
         {rows.map((row, i) => (
-          <div className="segment-row" key={row.id}>
+          <div
+            className={cn(
+              'segment-row',
+              conflict &&
+                (conflict.segmentId === row.id ||
+                  (conflict.entryId === eid && conflict.conflictingSegmentId === row.id)) &&
+                'rounded-md border border-destructive p-2',
+            )}
+            key={row.id}
+          >
             <span className="segment-index">{i + 1}</span>
             <div className="segment-field">
               <span>开始</span>
@@ -321,6 +378,40 @@ export function EntrySheet({
               >
                 <Trash2 size={16} />
               </Button>
+            )}
+            {conflict?.segmentId === row.id && (
+              <Alert
+                ref={conflictNotice}
+                tabIndex={-1}
+                variant="destructive"
+                aria-label={`时段 ${i + 1} 时间冲突`}
+                className="col-span-full"
+              >
+                <AlertDescription className="flex flex-col items-start gap-2">
+                  <strong>时段 {i + 1} 时间冲突</strong>
+                  <span>
+                    {conflict.entryId === eid
+                      ? `与本记录的时段 ${rows.findIndex((item) => item.id === conflict.conflictingSegmentId) + 1} 重叠`
+                      : `与「${conflict.title}」重叠`}
+                  </span>
+                  <span className="tabular-nums">
+                    {localInput(conflict.startAt, zone).replace('T', ' ')} 至{' '}
+                    {conflict.endAt === null
+                      ? '尚未结束'
+                      : localInput(conflict.endAt, zone).replace('T', ' ')}
+                  </span>
+                  {conflict.entryId !== eid && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setViewConflict(true)}
+                    >
+                      查看冲突记录
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         ))}
@@ -402,7 +493,7 @@ export function EntrySheet({
           />
         </Field>
         {errors.note && <p className="error">{errors.note.message}</p>}
-        {error && (
+        {error && !conflict && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -433,6 +524,13 @@ export function EntrySheet({
           </Button>
         </footer>
       </form>
+      {viewConflict && conflict && (
+        <ConflictRecordDialog
+          entryId={conflict.entryId}
+          zone={zone}
+          onClose={() => setViewConflict(false)}
+        />
+      )}
       {discardConfirm && (
         <Modal
           confirmation

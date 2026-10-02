@@ -1,10 +1,12 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { beforeEach, it, expect, vi } from 'vitest';
 import { EntrySheet } from './entry-sheet';
 import type { Entry } from '../../services/types';
 import { command } from '../../services/client';
 vi.mock('../../services/client', () => ({ command: vi.fn().mockResolvedValue(0) }));
-beforeEach(() => vi.mocked(command).mockReset().mockResolvedValue(0));
+beforeEach(() => {
+  vi.mocked(command).mockReset().mockResolvedValue(0);
+});
 
 const example: Entry = {
   id: 'draft',
@@ -128,6 +130,106 @@ it('retains a failed save and prevents closing while a retry is pending', async 
   await screen.findByRole('button', { name: '保存记录' });
   expect(onSaved).toHaveBeenCalledOnce();
   expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+});
+
+it('locates a conflict and lets the user inspect it without replacing the draft', async () => {
+  openEditor();
+  const other = { ...example, id: 'other', title: '同名任务', note: '已有记录备注' };
+  vi.mocked(command).mockImplementation(async (op) => {
+    if (op === 'save_entry')
+      throw {
+        code: 'OVERLAP',
+        message: '时间重叠',
+        details: {
+          segmentId: 's1',
+          entryId: 'other',
+          title: '同名任务',
+          startAt: example.segments[0].startAt,
+          endAt: example.segments[0].endAt,
+        },
+      };
+    if (op === 'get_workspace') return { entries: [other] };
+    return 0;
+  });
+  fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: '保留当前草稿' } });
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  const conflict = await screen.findByRole('alert', { name: '时段 1 时间冲突' });
+  expect(conflict).toHaveTextContent('同名任务');
+  expect(conflict).toHaveTextContent('2026-10-03 09:00:00');
+  fireEvent.click(within(conflict).getByRole('button', { name: '查看冲突记录' }));
+  const dialog = await screen.findByRole('dialog', { name: '冲突记录' });
+  expect(await within(dialog).findByText('已有记录备注')).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: '返回编辑' }));
+  expect(screen.getByLabelText('任务标题')).toHaveValue('保留当前草稿');
+  fireEvent.click(screen.getByRole('button', { name: '移除时段 1' }));
+  expect(screen.queryByRole('alert', { name: '时段 1 时间冲突' })).not.toBeInTheDocument();
+});
+
+it('keeps the draft when the conflicting record cannot be read and offers retry', async () => {
+  openEditor();
+  vi.mocked(command).mockImplementation(async (op) => {
+    if (op === 'save_entry')
+      throw {
+        code: 'OVERLAP',
+        message: '时间重叠',
+        details: {
+          segmentId: 's1',
+          entryId: 'other',
+          title: '已有任务',
+          startAt: example.segments[0].startAt,
+          endAt: null,
+        },
+      };
+    throw { message: '读取失败' };
+  });
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  fireEvent.click(await screen.findByRole('button', { name: '查看冲突记录' }));
+  const dialog = screen.getByRole('dialog', { name: '冲突记录' });
+  expect(await within(dialog).findByText('读取失败')).toBeInTheDocument();
+  expect(within(dialog).getByRole('button', { name: '重试' })).toBeInTheDocument();
+  vi.mocked(command).mockResolvedValue({
+    entries: [{ ...example, id: 'other', title: '重试后读取的任务' }],
+  });
+  fireEvent.click(within(dialog).getByRole('button', { name: '重试' }));
+  expect(await within(dialog).findByText('重试后读取的任务')).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole('button', { name: '返回编辑' }));
+  expect(screen.getByLabelText('任务标题')).toHaveValue(example.title);
+});
+
+it('locates internal overlap and saves after removing the conflicting period', async () => {
+  const entry = {
+    ...example,
+    segments: [...example.segments, { ...example.segments[0], id: 's2' }],
+  };
+  const { onSaved } = openEditor({ entry });
+  vi.mocked(command).mockImplementation(async (op, input) => {
+    if (op === 'save_entry') {
+      const saved = (input as { entry: Entry }).entry;
+      if (saved.segments.length > 1)
+        throw {
+          code: 'VALIDATION',
+          message: '时段重叠',
+          details: {
+            segmentId: 's1',
+            conflictingSegmentId: 's2',
+            entryId: entry.id,
+            title: entry.title,
+            startAt: entry.segments[1].startAt,
+            endAt: entry.segments[1].endAt,
+          },
+        };
+      return { value: saved, workspaceRevision: 'next' };
+    }
+    return 0;
+  });
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  const alert = await screen.findByRole('alert', { name: '时段 1 时间冲突' });
+  expect(alert).toHaveTextContent('与本记录的时段 2 重叠');
+  expect(screen.queryByRole('button', { name: '查看冲突记录' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '移除时段 2' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
 });
 it('removes the automatically included interval when exclusion is selected', () => {
   const e: Entry = {
