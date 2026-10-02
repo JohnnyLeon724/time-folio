@@ -19,3 +19,22 @@ fn settings_require_fresh_preview_and_no_active_timer() {
     assert!(svc.preview("Etc/UTC").is_err());
     assert_eq!(db.settings().unwrap().reporting_time_zone, "Etc/UTC");
 }
+
+#[test]
+fn zone_preview_expires_at_the_ten_minute_boundary() {
+    let db = Arc::new(Database::open_memory().unwrap());
+    let clock = TestClock::at(MIN_TIME + 1000);
+    let service = SettingsService::new(db.clone(), clock.clone());
+    let preview = service.preview("Asia/Shanghai").unwrap();
+    let revision = db.revision().unwrap();
+    clock.set(MIN_TIME + 601000);
+    assert_eq!(
+        service
+            .apply(ctx(&db, None), &preview.token)
+            .unwrap_err()
+            .code,
+        "STALE_PREVIEW"
+    );
+    assert_eq!(db.revision().unwrap(), revision);
+    assert_eq!(db.settings().unwrap().reporting_time_zone, "Etc/UTC");
+}

@@ -69,3 +69,22 @@ fn failed_insert_rolls_back_replacement() {
     assert!(service.apply(ctx(&db, None), &preview.token, true).is_err());
     assert_eq!(db.read(records::all).unwrap()[0], a);
 }
+
+#[test]
+fn preview_expires_at_the_ten_minute_boundary() {
+    let dir = tempfile::tempdir().unwrap();
+    let db = Arc::new(Database::open_memory().unwrap());
+    let clock = TestClock::at(MIN_TIME + 10000);
+    let service = RestoreService::new(
+        db.clone(),
+        clock.clone(),
+        SnapshotService::new(db.clone(), dir.path().into()),
+    );
+    let preview = service.stage(db.read(capture).unwrap()).unwrap();
+    let revision = db.revision().unwrap();
+    clock.set(preview.expires_at);
+    let result = service.apply(ctx(&db, None), &preview.token, false);
+    assert_eq!(result.unwrap_err().code, "STALE_PREVIEW");
+    assert_eq!(db.revision().unwrap(), revision);
+    assert!(service.snapshots.list().unwrap().is_empty());
+}

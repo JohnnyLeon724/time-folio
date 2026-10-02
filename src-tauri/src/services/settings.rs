@@ -99,7 +99,7 @@ impl SettingsService {
             .cloned()
             .ok_or_else(|| AppError::new("STALE_PREVIEW", "请重新预览时区变化"))?;
         let now = self.clock.utc_now();
-        if preview.expires_at < now || preview.revision != ctx.workspace_revision {
+        if preview.expires_at <= now || preview.revision != ctx.workspace_revision {
             return Err(AppError::new("STALE_PREVIEW", "预览已过期，请重新预览"));
         }
         let result = self.db.mutate(ctx, &format!("zone:{token}"), now, |tx| {

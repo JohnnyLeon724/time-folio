@@ -164,7 +164,7 @@ impl RestoreService {
             .cloned()
             .ok_or_else(|| AppError::new("STALE_PREVIEW", "请重新选择并预览备份"))?;
         let now = self.clock.utc_now();
-        if staged.preview.expires_at < now || staged.revision != ctx.workspace_revision {
+        if staged.preview.expires_at <= now || staged.revision != ctx.workspace_revision {
             return Err(AppError::new("STALE_PREVIEW", "本地数据已变化或预览已过期"));
         }
         if staged.preview.replaces_local && !confirmed {
