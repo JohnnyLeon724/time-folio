@@ -1,0 +1,75 @@
+{
+  "format": "hourtrail-backup",
+  "formatVersion": 1,
+  "appVersion": "0.1.0",
+  "exportedAt": "2026-10-02T00:00:00Z",
+  "workspaceId": "00000000-0000-4000-8000-000000000100",
+  "portableSettings": {
+    "reportingTimeZone": "Asia/Shanghai",
+    "weekStartsOn": 1
+  },
+  "workEntries": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "title": "跨月工作 😀",
+      "note": "合成数据：第一行\n第二行 😀",
+      "source": "timer",
+      "status": "completed",
+      "createdAt": 1790640000000,
+      "updatedAt": 1790816400000,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "title": "旧版开放时段，迁移后需核对",
+      "note": "合成数据：第一行\n第二行 😀",
+      "source": "timer",
+      "status": "needs_review",
+      "createdAt": 1790640000000,
+      "updatedAt": 1790816400000,
+      "deletedAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "title": "已删除的合成记录",
+      "note": "合成数据：第一行\n第二行 😀",
+      "source": "timer",
+      "status": "completed",
+      "createdAt": 1790640000000,
+      "updatedAt": 1790816400000,
+      "deletedAt": 1790820000000
+    }
+  ],
+  "workSegments": [
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "entryId": "00000000-0000-4000-8000-000000000001",
+      "startAt": 1790782200000,
+      "endAt": 1790785800000
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "entryId": "00000000-0000-4000-8000-000000000002",
+      "startAt": 1790812800000,
+      "endAt": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000013",
+      "entryId": "00000000-0000-4000-8000-000000000003",
+      "startAt": 1790643600000,
+      "endAt": 1790647200000
+    }
+  ],
+  "reviewItems": [
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "entryId": "00000000-0000-4000-8000-000000000002",
+      "reason": "recovery",
+      "candidateStartAt": 1790812800000,
+      "candidateEndAt": null,
+      "boundaryQuality": "estimated",
+      "resolution": "unresolved",
+      "resolvedAt": null
+    }
+  ]
+}
