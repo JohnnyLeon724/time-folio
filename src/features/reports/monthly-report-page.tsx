@@ -1,3 +1,13 @@
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { EmptyState } from '@/components/empty-state';
 import { Download, CalendarCheck, Clock3, ClipboardCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { duration, time } from '../../lib/format';
@@ -27,26 +37,32 @@ export function MonthlyReport({
         </Button>
       </div>
       <div className="report-stats">
-        <div>
-          <Clock3 size={20} />
-          <span>已确认工时</span>
-          <strong>{duration(report.durationMs)}</strong>
-        </div>
-        <div>
-          <CalendarCheck size={20} />
-          <span>工作天数</span>
-          <strong>
-            {report.workedDayCount} <small>天</small>
-          </strong>
-        </div>
-        <div>
-          <ClipboardCheck size={20} />
-          <span>尚未计入</span>
-          <strong>
-            {report.pendingCount} <small>条待核对</small>
-          </strong>
-          <p>{report.activeCount} 条活动记录</p>
-        </div>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <Clock3 size={20} />
+            <span>已确认工时</span>
+            <strong className="stat-value">{duration(report.durationMs)}</strong>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <CalendarCheck size={20} />
+            <span>工作天数</span>
+            <strong className="stat-value">
+              {report.workedDayCount} <small>天</small>
+            </strong>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <ClipboardCheck size={20} />
+            <span>尚未计入</span>
+            <strong className="stat-value">
+              {report.pendingCount} <small>条待核对</small>
+            </strong>
+            <p>{report.activeCount} 条活动记录</p>
+          </CardContent>
+        </Card>
       </div>
       <section className="report-chart">
         <h2>每天的投入</h2>
@@ -66,39 +82,42 @@ export function MonthlyReport({
           <h2>工作明细</h2>
           <span className="muted">仅包含已确认记录</span>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>日期</th>
-              <th>任务</th>
-              <th>工作时段</th>
-              <th>时长</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>日期</TableHead>
+              <TableHead>任务</TableHead>
+              <TableHead>工作时段</TableHead>
+              <TableHead>时长</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {report.rows.map((r, i) => (
-              <tr key={`${r.entryId}-${i}`}>
-                <td>{r.workDate}</td>
-                <td>
-                  <button className="text-link" onClick={() => onEdit(r.entryId)}>
+              <TableRow key={`${r.entryId}-${i}`}>
+                <TableCell>{r.workDate}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="link"
+                    className="h-auto p-0 text-left whitespace-normal"
+                    onClick={() => onEdit(r.entryId)}
+                  >
                     {r.title}
-                  </button>
-                </td>
-                <td>
+                  </Button>
+                </TableCell>
+                <TableCell>
                   {time(r.startAt, report.reportingTimeZone)} –{' '}
                   {time(r.endAt, report.reportingTimeZone)}
-                </td>
-                <td>{duration(r.durationMs)}</td>
-              </tr>
+                </TableCell>
+                <TableCell>{duration(r.durationMs)}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         {!report.rows.length && (
-          <div className="empty-state">
-            <Clock3 size={30} />
-            <h3>这个月还没有已确认工时</h3>
-            <p>结束计时并完成核对后，记录会出现在这里。</p>
-          </div>
+          <EmptyState
+            title="这个月还没有已确认工时"
+            description="结束计时并完成核对后，记录会出现在这里。"
+          />
         )}
       </section>
     </>

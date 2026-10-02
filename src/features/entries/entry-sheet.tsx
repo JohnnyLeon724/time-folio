@@ -1,9 +1,15 @@
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2, Clock3, AlertCircle } from 'lucide-react';
-import { Modal } from '../../components/ui/dialog';
+import { Modal } from '../../components/modal';
 import { Button } from '../../components/ui/button';
 import { command } from '../../services/client';
 import type { Entry, Context, AppError, Mutation } from '../../services/types';
@@ -226,7 +232,7 @@ export function EntrySheet({
   }
   return (
     <Modal
-      wide
+      side
       title={entry ? (review ? '核对这段工作' : '工作记录') : '补录工作'}
       description={`所有时间均使用 ${zone}。${entry ? statusText[entry.status] : '保存后计入正式报表。'}`}
       onClose={() => {
@@ -234,10 +240,16 @@ export function EntrySheet({
       }}
     >
       <form onSubmit={handleSubmit(() => save())} className="entry-form">
-        <label>
-          任务标题
-          <input autoFocus {...register('title')} placeholder="例如：完成登录页面" />
-        </label>
+        <Field>
+          <FieldLabel htmlFor="entry-title">任务标题</FieldLabel>
+          <Input
+            id="entry-title"
+            aria-invalid={!!errors.title}
+            autoFocus
+            {...register('title')}
+            placeholder="例如：完成登录页面"
+          />
+        </Field>
         {errors.title && <p className="error">{errors.title.message}</p>}
         <div className="field-heading">
           <span>实际工作时段</span>
@@ -245,7 +257,7 @@ export function EntrySheet({
             <Button
               type="button"
               variant="ghost"
-              size="small"
+              size="sm"
               onClick={() =>
                 setRows((old) => [
                   ...old,
@@ -264,7 +276,7 @@ export function EntrySheet({
             <span className="segment-index">{i + 1}</span>
             <label>
               <span>开始</span>
-              <input
+              <Input
                 type="datetime-local"
                 step="1"
                 aria-label={`时段 ${i + 1} 开始`}
@@ -277,7 +289,7 @@ export function EntrySheet({
             <span className="segment-separator">至</span>
             <label>
               <span>结束</span>
-              <input
+              <Input
                 type="datetime-local"
                 step="1"
                 aria-label={`时段 ${i + 1} 结束`}
@@ -288,21 +300,22 @@ export function EntrySheet({
               />
             </label>
             {!active && (
-              <button
+              <Button
                 type="button"
-                className="icon-button"
+                variant="ghost"
+                size="icon-sm"
                 aria-label={`移除时段 ${i + 1}`}
                 onClick={() => setRows((old) => old.filter((r) => r.id !== row.id))}
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             )}
           </div>
         ))}
         {ambiguity && (
           <label className="review-notice">
             该时间出现两次，请选择偏移
-            <select
+            <NativeSelect
               value=""
               onChange={(e) => {
                 setRows((old) =>
@@ -323,7 +336,7 @@ export function EntrySheet({
                   {o / 3600}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
         )}
         <div className="duration-preview">
@@ -352,7 +365,7 @@ export function EntrySheet({
               至{' '}
               {r.candidateEndAt ? localInput(r.candidateEndAt, zone).replace('T', ' ') : '未知终点'}
             </p>
-            <select
+            <NativeSelect
               aria-label="中断时间处理"
               value={r.resolution}
               onChange={(e) => choose(r.id, e.target.value)}
@@ -361,18 +374,26 @@ export function EntrySheet({
               <option value="included">计入，并添加候选时段</option>
               <option value="excluded">排除（请检查上方时段）</option>
               <option value="adjusted">已在上方手动修正</option>
-            </select>
+            </NativeSelect>
           </div>
         ))}
-        <label>
-          备注 <span className="muted">可选</span>
-          <textarea {...register('note')} rows={3} placeholder="记录完成了什么，方便月底回顾。" />
-        </label>
+        <Field>
+          <FieldLabel htmlFor="entry-note">
+            备注 <span className="muted">可选</span>
+          </FieldLabel>
+          <Textarea
+            id="entry-note"
+            aria-invalid={!!errors.note}
+            {...register('note')}
+            rows={3}
+            placeholder="记录完成了什么，方便月底回顾。"
+          />
+        </Field>
         {errors.note && <p className="error">{errors.note.message}</p>}
         {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
         <footer className="modal-footer">
           {entry && !active && (
@@ -402,15 +423,23 @@ export function EntrySheet({
       </form>
       {deleteConfirm && (
         <Modal
+          confirmation
           title="删除这条记录？"
           description="记录会移入回收站，不再计入正式工时。"
-          onClose={() => setDeleteConfirm(false)}
+          onClose={() => {
+            if (!busy) setDeleteConfirm(false);
+          }}
         >
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <div className="modal-footer">
-            <Button variant="secondary" onClick={() => setDeleteConfirm(false)}>
+            <AlertDialogCancel disabled={busy} onClick={() => setDeleteConfirm(false)}>
               取消
-            </Button>
-            <Button variant="danger" onClick={() => void remove()} disabled={busy}>
+            </AlertDialogCancel>
+            <Button variant="destructive" onClick={() => void remove()} disabled={busy}>
               确认删除
             </Button>
           </div>

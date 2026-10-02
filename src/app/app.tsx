@@ -1,24 +1,18 @@
+import { WorkspaceLayout } from './workspace-layout';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/empty-state';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { listen } from '@tauri-apps/api/event';
 import { save } from '@tauri-apps/plugin-dialog';
-import {
-  LayoutGrid,
-  ChartNoAxesCombined,
-  Settings2,
-  CheckCheck,
-  Trash2,
-  ArrowUpRight,
-  Check,
-  Plus,
-  X,
-  Clock3,
-  RotateCcw,
-  AlertTriangle,
-} from 'lucide-react';
+import { CheckCheck, Trash2, Check, Clock3, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Providers } from './providers';
 import { Button } from '../components/ui/button';
-import { Modal } from '../components/ui/dialog';
+import { Modal } from '../components/modal';
 import { TimerCard } from '../features/timer/timer-card';
 import { WorkCalendar } from '../features/calendar/work-calendar';
 import { EntrySheet } from '../features/entries/entry-sheet';
@@ -38,7 +32,7 @@ export default function App() {
 function WorkspaceApp() {
   const cache = useQueryClient();
   const [page, setPage] = useState('workspace'),
-    [month, setMonth] = useState(new Date().toISOString().slice(0, 7)),
+    [month, setMonth] = useState(''),
     [notice, setNotice] = useState(''),
     [editor, setEditor] = useState<{ entry?: Entry; date: string; revision: string } | null>(null),
     [quit, setQuit] = useState(false),
@@ -54,10 +48,19 @@ function WorkspaceApp() {
   });
   const workspace = query.data;
   const zone = workspace?.settings.reportingTimeZone ?? 'Asia/Shanghai';
+  useEffect(() => {
+    if (workspace && !month) setMonth(localDate(Date.now(), zone).slice(0, 7));
+  }, [workspace, month, zone]);
+  useEffect(() => {
+    if (notice) {
+      toast(notice);
+      setNotice('');
+    }
+  }, [notice]);
   const report = useQuery({
     queryKey: ['report', month, workspace?.timer.workspaceRevision],
     queryFn: () => command<Report>('get_month_report', { month }),
-    enabled: !!workspace,
+    enabled: !!workspace && !!month,
   });
   function refresh() {
     void cache.invalidateQueries({ queryKey: ['workspace'] });
@@ -152,154 +155,66 @@ function WorkspaceApp() {
   const today = localDate(Date.now(), zone);
   const formalMs = report.data?.durationMs ?? 0;
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setPage('workspace');
-          }}
-        >
-          <span className="brand-symbol">
-            <Clock3 size={25} />
-          </span>
-          <span>
-            HourTrail<small>工作时间，自有记录</small>
-          </span>
-        </a>
-        <nav aria-label="主导航">
-          {[
-            ['workspace', '工作台', LayoutGrid],
-            ['report', '月度报告', ChartNoAxesCombined],
-            ['review', '待核对', CheckCheck],
-          ].map(([key, label, Icon]) => {
-            const I = Icon as typeof LayoutGrid;
-            return (
-              <button
-                key={String(key)}
-                className={page === key ? 'nav-item active' : 'nav-item'}
-                onClick={() => setPage(String(key))}
-              >
-                <I size={19} />
-                <span>{String(label)}</span>
-                {key === 'review' && pending.length > 0 && <b>{pending.length}</b>}
-              </button>
-            );
-          })}
-        </nav>
-        <div className="sidebar-note">
-          <span className="small-leaf">◷</span>
-          <p>
-            把时间留给工作，
-            <br />
-            把记录交给这里。
-          </p>
-          <div className="local-status">
-            <i />
-            本地保存 · 无需联网
+    <WorkspaceLayout page={page} onPage={setPage} pendingCount={pending.length} zone={zone}>
+      <div className="page-content">
+        {!desktop ? (
+          <div className="browser-note">
+            <Clock3 size={40} />
+            <h1>HourTrail 桌面工作台</h1>
+            <p>请启动桌面应用，使用本地计时、日历和备份功能。</p>
           </div>
-        </div>
-        <div className="sidebar-bottom">
-          <button
-            className={page === 'trash' ? 'nav-item active' : 'nav-item'}
-            onClick={() => setPage('trash')}
-          >
-            <Trash2 size={18} />
-            回收站
-          </button>
-          <button
-            className={page === 'settings' ? 'nav-item active' : 'nav-item'}
-            onClick={() => setPage('settings')}
-          >
-            <Settings2 size={18} />
-            设置与数据
-          </button>
-          <span className="version">HourTrail 0.1.0</span>
-        </div>
-      </aside>
-      <main className="main-content">
-        <header className="topbar">
-          <div className="breadcrumb">
-            我的工作空间 <span>/</span>{' '}
-            {
-              {
-                workspace: '工作台',
-                report: '月度报告',
-                review: '待核对',
-                trash: '回收站',
-                settings: '设置与数据',
-              }[page]
-            }
+        ) : query.isPending ? (
+          <div aria-label="正在加载工作区" className="flex flex-col gap-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-[540px] w-full" />
           </div>
-          <div className="topbar-right">
-            <span className="offline-badge">
-              <span />
-              离线可用
-            </span>
-            <span className="avatar">我</span>
+        ) : query.error ? (
+          <div className="error-panel">
+            <AlertTriangle />
+            <h2>无法读取工作区</h2>
+            <p>{(query.error as unknown as AppError).message}</p>
+            <Button onClick={() => void query.refetch()}>重试读取</Button>
+            <p>原数据库和快照将保留。也可以先创建空白工作区，再从设置页恢复快照或备份。</p>
+            <Button variant="secondary" onClick={() => setRepairConfirm(true)}>
+              保留损坏副本并重新创建
+            </Button>
           </div>
-        </header>
-        <div className="page-content">
-          {!desktop ? (
-            <div className="empty-state browser-note">
-              <Clock3 size={40} />
-              <h1>HourTrail 桌面工作台</h1>
-              <p>请启动桌面应用，使用本地计时、日历和备份功能。</p>
-              <code>pnpm tauri dev</code>
-            </div>
-          ) : query.isPending ? (
-            <div className="empty-state">正在打开本地工作记录…</div>
-          ) : query.error ? (
-            <div className="error-panel">
-              <AlertTriangle />
-              <h2>无法读取工作区</h2>
-              <p>{(query.error as unknown as AppError).message}</p>
-              <Button onClick={() => void query.refetch()}>重试读取</Button>
-              <p>原数据库和快照将保留。也可以先创建空白工作区，再从设置页恢复快照或备份。</p>
-              <Button variant="secondary" onClick={() => setRepairConfirm(true)}>
-                保留损坏副本并重新创建
-              </Button>
-            </div>
-          ) : (
-            workspace && (
-              <>
-                {page === 'workspace' && (
-                  <>
-                    <div className="welcome-heading">
-                      <div>
-                        <p className="date-label">
-                          {new Intl.DateTimeFormat('zh-CN', {
-                            timeZone: zone,
-                            month: 'long',
-                            day: 'numeric',
-                            weekday: 'long',
-                          }).format(Date.now())}
-                        </p>
-                        <h1>让每一段投入，有迹可循。</h1>
-                      </div>
-                      <Button variant="ghost" onClick={() => setPage('report')}>
-                        查看月度报告
-                        <ArrowUpRight size={16} />
-                      </Button>
+        ) : (
+          workspace && (
+            <>
+              {page === 'workspace' && (
+                <>
+                  <div className="page-heading workspace-title">
+                    <div>
+                      <p className="eyebrow">工作空间</p>
+                      <h1>记录每一段工作</h1>
                     </div>
-                    <TimerCard
-                      state={workspace.timer}
-                      enabled={workspace.settings.confirmed}
-                      onAction={act}
-                    />
-                    <div className="month-strip">
-                      <span>
-                        本月概览 <small>{month}</small>
-                      </span>
-                      <strong>{duration(formalMs)}</strong>
-                      <span>{report.data?.workedDayCount ?? 0} 个工作日</span>
-                      <button onClick={() => setPage('review')}>
-                        {pending.length ? `${pending.length} 条记录待核对` : '记录已核对'}
-                        <Check size={14} />
-                      </button>
-                    </div>
+                    <span className="muted">
+                      {new Intl.DateTimeFormat('zh-CN', {
+                        timeZone: zone,
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'long',
+                      }).format(Date.now())}
+                    </span>
+                  </div>
+                  <TimerCard
+                    state={workspace.timer}
+                    enabled={workspace.settings.confirmed}
+                    onAction={act}
+                  />
+                  <div className="month-strip">
+                    <span>
+                      已确认工时 <small>{month}</small>
+                    </span>
+                    <strong>{duration(formalMs)}</strong>
+                    <span>{report.data?.workedDayCount ?? 0} 个工作日</span>
+                    <Button variant="ghost" size="sm" onClick={() => setPage('review')}>
+                      {pending.length ? `${pending.length} 条记录待核对` : '记录已核对'}
+                      <Check size={14} />
+                    </Button>
+                  </div>
+                  {month && (
                     <WorkCalendar
                       month={month}
                       onMonth={setMonth}
@@ -311,165 +226,153 @@ function WorkspaceApp() {
                       }
                       report={report.data}
                     />
-                  </>
-                )}
-                {page === 'report' && (
-                  <>
-                    <label className="month-picker">
-                      报告月份
-                      <input
-                        type="month"
-                        value={month}
-                        onChange={(e) => setMonth(e.target.value)}
-                      />
-                    </label>
-                    {report.data ? (
-                      <MonthlyReport
-                        report={report.data}
-                        onExport={() => void exportCsv()}
-                        onEdit={edit}
-                      />
-                    ) : (
-                      <p>正在计算报告…</p>
-                    )}
-                  </>
-                )}
-                {(page === 'review' || page === 'trash') && (
-                  <>
-                    <div className="page-heading">
-                      <h1>{page === 'review' ? '待核对的工作' : '回收站'}</h1>
-                      <p>
-                        {page === 'review'
-                          ? '确认实际工作的时间，完成后才计入正式工时。'
-                          : '删除的记录保留在这里，可以随时找回。'}
-                      </p>
-                    </div>
-                    <div className="entry-list">
-                      {(page === 'review' ? pending : deleted).map((e) => (
-                        <div className="entry-list-row" key={e.id}>
-                          <span className="entry-list-icon">
-                            {page === 'review' ? <CheckCheck size={22} /> : <Trash2 size={22} />}
-                          </span>
-                          <div>
-                            <h3>{e.title}</h3>
-                            <p>
-                              {localDate(e.createdAt, zone)} · {e.segments.length} 个时段 ·{' '}
-                              {statusText[e.status]}
-                            </p>
-                          </div>
-                          <strong>
-                            {duration(
-                              e.segments.reduce(
-                                (n, s) => n + (s.endAt ? s.endAt - s.startAt : 0),
-                                0,
-                              ),
-                            )}
-                          </strong>
-                          {page === 'review' ? (
-                            <Button variant="secondary" size="small" onClick={() => edit(e.id)}>
-                              核对记录
-                            </Button>
-                          ) : (
-                            <>
-                              <Button
-                                disabled={busy}
-                                variant="secondary"
-                                size="small"
-                                onClick={() => {
-                                  setBusy(true);
-                                  void command('restore_entry', {
-                                    entryId: e.id,
-                                    context: {
-                                      requestId: crypto.randomUUID(),
-                                      workspaceRevision: workspace.timer.workspaceRevision,
-                                      expectedEntryVersion: e.version,
-                                    },
-                                    asReview: false,
-                                  })
-                                    .then(() => refresh())
-                                    .catch((err) => setRefreshNotice((err as AppError).message))
-                                    .finally(() => setBusy(false));
-                                }}
-                              >
-                                找回
-                              </Button>
-                              <Button
-                                disabled={busy}
-                                variant="ghost"
-                                size="small"
-                                onClick={() => {
-                                  setBusy(true);
-                                  void command('restore_entry', {
-                                    entryId: e.id,
-                                    context: {
-                                      requestId: crypto.randomUUID(),
-                                      workspaceRevision: workspace.timer.workspaceRevision,
-                                      expectedEntryVersion: e.version,
-                                    },
-                                    asReview: true,
-                                  })
-                                    .then(() => {
-                                      refresh();
-                                      setRefreshNotice('已找回到待核对列表');
-                                    })
-                                    .catch((err) => setRefreshNotice((err as AppError).message))
-                                    .finally(() => setBusy(false));
-                                }}
-                              >
-                                作为待核对找回
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      {!(page === 'review' ? pending : deleted).length && (
-                        <div className="empty-state">
-                          <CheckCheck size={38} />
-                          <h3>{page === 'review' ? '目前没有待核对记录' : '回收站是空的'}</h3>
+                  )}
+                </>
+              )}
+              {page === 'report' && (
+                <>
+                  <label className="month-picker">
+                    报告月份
+                    <Input
+                      type="month"
+                      value={month}
+                      onChange={(e) => e.target.value && setMonth(e.target.value)}
+                    />
+                  </label>
+                  {report.data ? (
+                    <MonthlyReport
+                      report={report.data}
+                      onExport={() => void exportCsv()}
+                      onEdit={edit}
+                    />
+                  ) : (
+                    <Skeleton className="h-[480px] w-full" />
+                  )}
+                </>
+              )}
+              {(page === 'review' || page === 'trash') && (
+                <>
+                  <div className="page-heading">
+                    <h1>{page === 'review' ? '待核对的工作' : '回收站'}</h1>
+                    <p>
+                      {page === 'review'
+                        ? '确认实际工作的时间，完成后才计入正式工时。'
+                        : '删除的记录保留在这里，可以随时找回。'}
+                    </p>
+                  </div>
+                  <div className="entry-list">
+                    {(page === 'review' ? pending : deleted).map((e) => (
+                      <div className="entry-list-row" key={e.id}>
+                        <span className="entry-list-icon">
+                          {page === 'review' ? <CheckCheck size={22} /> : <Trash2 size={22} />}
+                        </span>
+                        <div>
+                          <h3>{e.title}</h3>
                           <p>
-                            {page === 'review'
-                              ? '安心投入下一段工作吧。'
-                              : '删除的工作记录会出现在这里。'}
+                            {localDate(e.createdAt, zone)} · {e.segments.length} 个时段 ·{' '}
+                            {statusText[e.status]}
                           </p>
                         </div>
-                      )}
-                      {refreshNotice && (
-                        <p role="status" className="dialog-note">
-                          {refreshNotice}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                )}
-                {page === 'settings' && (
-                  <SettingsPage
-                    workspace={workspace}
-                    onChanged={() => {
-                      setEditor(null);
-                      refresh();
-                    }}
-                    notify={setNotice}
-                  />
-                )}
-              </>
-            )
-          )}
-          {report.error && (
-            <p role="alert" className="error">
-              {(report.error as unknown as AppError).message}
-            </p>
-          )}
-        </div>
-      </main>
-      {notice && (
-        <div className="toast" role="status">
-          <CheckCheck size={19} />
-          <span>{notice}</span>
-          <button className="icon-button" aria-label="关闭提示" onClick={() => setNotice('')}>
-            <X size={16} />
-          </button>
-        </div>
-      )}
+                        <strong>
+                          {duration(
+                            e.segments.reduce((n, s) => n + (s.endAt ? s.endAt - s.startAt : 0), 0),
+                          )}
+                        </strong>
+                        {page === 'review' ? (
+                          <Button variant="secondary" size="sm" onClick={() => edit(e.id)}>
+                            核对记录
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              disabled={busy}
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setBusy(true);
+                                void command('restore_entry', {
+                                  entryId: e.id,
+                                  context: {
+                                    requestId: crypto.randomUUID(),
+                                    workspaceRevision: workspace.timer.workspaceRevision,
+                                    expectedEntryVersion: e.version,
+                                  },
+                                  asReview: false,
+                                })
+                                  .then(() => refresh())
+                                  .catch((err) => setRefreshNotice((err as AppError).message))
+                                  .finally(() => setBusy(false));
+                              }}
+                            >
+                              找回
+                            </Button>
+                            <Button
+                              disabled={busy}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setBusy(true);
+                                void command('restore_entry', {
+                                  entryId: e.id,
+                                  context: {
+                                    requestId: crypto.randomUUID(),
+                                    workspaceRevision: workspace.timer.workspaceRevision,
+                                    expectedEntryVersion: e.version,
+                                  },
+                                  asReview: true,
+                                })
+                                  .then(() => {
+                                    refresh();
+                                    setRefreshNotice('已找回到待核对列表');
+                                  })
+                                  .catch((err) => setRefreshNotice((err as AppError).message))
+                                  .finally(() => setBusy(false));
+                              }}
+                            >
+                              作为待核对找回
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {!(page === 'review' ? pending : deleted).length && (
+                      <EmptyState
+                        title={page === 'review' ? '目前没有待核对记录' : '回收站是空的'}
+                        description={
+                          page === 'review'
+                            ? '安心投入下一段工作吧。'
+                            : '删除的工作记录会出现在这里。'
+                        }
+                      />
+                    )}
+                    {refreshNotice && (
+                      <p role="status" className="dialog-note">
+                        {refreshNotice}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+              {page === 'settings' && (
+                <SettingsPage
+                  workspace={workspace}
+                  onChanged={() => {
+                    setEditor(null);
+                    refresh();
+                  }}
+                  notify={setNotice}
+                />
+              )}
+            </>
+          )
+        )}
+        {report.error && (
+          <Alert variant="destructive">
+            <AlertDescription>{(report.error as unknown as AppError).message}</AlertDescription>
+          </Alert>
+        )}
+      </div>
+
       {editor && workspace && (
         <EntrySheet
           key={`${editor.entry?.id ?? editor.date}-${editor.revision}`}
@@ -498,14 +401,17 @@ function WorkspaceApp() {
       )}
       {repairConfirm && (
         <Modal
+          confirmation
           title="保留损坏副本并重新创建？"
           description="应用会先保存当前数据库及关联文件的副本，再创建空白工作区。随后可在设置页恢复本地快照或导入备份。"
-          onClose={() => setRepairConfirm(false)}
+          onClose={() => {
+            if (!busy) setRepairConfirm(false);
+          }}
         >
           <div className="modal-footer">
-            <Button variant="secondary" onClick={() => setRepairConfirm(false)}>
+            <AlertDialogCancel disabled={busy} onClick={() => setRepairConfirm(false)}>
               取消
-            </Button>
+            </AlertDialogCancel>
             <Button
               disabled={busy}
               onClick={() => {
@@ -567,6 +473,6 @@ function WorkspaceApp() {
           </div>
         </Modal>
       )}
-    </div>
+    </WorkspaceLayout>
   );
 }

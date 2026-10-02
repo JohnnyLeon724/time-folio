@@ -1,5 +1,9 @@
+import { Input } from '@/components/ui/input';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, ArrowUpRight, Clock3 } from 'lucide-react';
+import { Play, Pause, Square, Clock3 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { duration } from '../../lib/format';
 import type { TimerState, AppError } from '../../services/types';
@@ -43,55 +47,60 @@ export function TimerCard({
     }
   }
   return (
-    <section
-      className={`timer-card ${entry?.status === 'running' ? 'is-running' : ''}`}
-      aria-label="工作计时"
-    >
+    <section className="timer-card" aria-label="工作计时">
       <div className="timer-main">
         <div className="timer-label">
-          <span className={`status-dot ${entry?.status === 'running' ? 'live' : ''}`} />
+          <Badge variant={entry?.status === 'running' ? 'default' : 'secondary'}>
+            {entry?.status === 'running' ? '计时中' : entry ? '已暂停' : '准备开始'}
+          </Badge>
           {entry
             ? entry.status === 'running'
-              ? '正在专注'
-              : '休息一下，随时继续'
-            : '从一段专注开始'}
+              ? '当前任务'
+              : '休息结束后可继续'
+            : '输入任务即可开始'}
         </div>
         {entry ? (
           <h2 className="active-title">{entry.title}</h2>
         ) : (
-          <input
-            className="task-input"
-            aria-label="任务标题"
-            placeholder="现在准备做什么？"
-            value={title}
-            maxLength={400}
-            onChange={(e) => setTitle(e.target.value)}
-            onCompositionStart={() => {
-              composing.current = true;
-            }}
-            onCompositionEnd={() => {
-              composing.current = false;
-            }}
-            onKeyDown={(e) => {
-              if (
-                e.key === 'Enter' &&
-                !e.nativeEvent.isComposing &&
-                !composing.current &&
-                title.trim() &&
-                enabled &&
-                !busy
-              ) {
-                e.preventDefault();
-                void act('start_timer');
-              }
-            }}
-          />
+          <Field>
+            <FieldLabel htmlFor="timer-title" className="sr-only">
+              任务标题
+            </FieldLabel>
+            <Input
+              id="timer-title"
+              className="task-input"
+              aria-label="任务标题"
+              placeholder="现在准备做什么？"
+              value={title}
+              maxLength={400}
+              onChange={(e) => setTitle(e.target.value)}
+              onCompositionStart={() => {
+                composing.current = true;
+              }}
+              onCompositionEnd={() => {
+                composing.current = false;
+              }}
+              onKeyDown={(e) => {
+                if (
+                  e.key === 'Enter' &&
+                  !e.nativeEvent.isComposing &&
+                  !composing.current &&
+                  title.trim() &&
+                  enabled &&
+                  !busy
+                ) {
+                  e.preventDefault();
+                  void act('start_timer');
+                }
+              }}
+            />
+          </Field>
         )}
         <p className="timer-hint">
-          <Clock3 size={14} />
+          <Clock3 data-icon="inline-start" />
           {entry
             ? '关闭窗口后仍会继续计时，休息时记得暂停。'
-            : '给这一段工作起个名字，剩下的交给计时器。'}
+            : '按 Enter 开始，结束后核对实际工作时段。'}
         </p>
       </div>
       <div className="timer-controls">
@@ -104,7 +113,7 @@ export function TimerCard({
               disabled={busy || !enabled || !title.trim()}
               onClick={() => void act('start_timer')}
             >
-              <Play size={17} fill="currentColor" />
+              <Play data-icon="inline-start" fill="currentColor" />
               开始工作
             </Button>
           ) : (
@@ -116,11 +125,15 @@ export function TimerCard({
                   void act(entry.status === 'running' ? 'pause_timer' : 'resume_timer')
                 }
               >
-                {entry.status === 'running' ? <Pause size={16} /> : <Play size={16} />}{' '}
+                {entry.status === 'running' ? (
+                  <Pause data-icon="inline-start" />
+                ) : (
+                  <Play data-icon="inline-start" />
+                )}{' '}
                 {entry.status === 'running' ? '暂停' : '继续'}
               </Button>
               <Button disabled={busy} onClick={() => void act('stop_timer')}>
-                <Square size={14} />
+                <Square data-icon="inline-start" />
                 结束并核对
               </Button>
             </>
@@ -128,11 +141,10 @@ export function TimerCard({
         </div>
       </div>
       {(error || state.storageError) && (
-        <p role="alert" className="error timer-error">
-          {error || state.storageError}
-        </p>
+        <Alert variant="destructive" className="timer-error">
+          <AlertDescription>{error || state.storageError}</AlertDescription>
+        </Alert>
       )}
-      <ArrowUpRight className="timer-decoration" size={20} />
     </section>
   );
 }

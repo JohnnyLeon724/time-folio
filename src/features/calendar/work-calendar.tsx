@@ -1,10 +1,35 @@
-import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, List, Columns3 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { localDate, time, duration, statusText } from '../../lib/format';
+import { useEffect, useMemo, useState } from 'react';
+import { TZDate } from '@date-fns/tz';
+import {
+  addMonths,
+  addWeeks,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  getDaysInMonth,
+  format,
+} from 'date-fns';
+import { zhCN } from 'date-fns/locale';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  CalendarDays,
+  List,
+  Columns3,
+  CircleCheck,
+  CircleDashed,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { EventCalendar } from '@/components/reui/event-calendar/event-calendar';
+import { EventCalendarContent } from '@/components/reui/event-calendar/event-calendar-content';
+import { localDate, duration, statusText, time } from '@/lib/format';
 import { toCalendarEvents } from './calendar-adapter';
-import type { Entry, Report } from '../../services/types';
-const weekday = ['一', '二', '三', '四', '五', '六', '日'];
+import { calendarChinese } from './calendar-locale';
+import type { Entry, Report } from '@/services/types';
+
+type View = 'month' | 'week' | 'agenda';
 export function WorkCalendar({
   month,
   onMonth,
@@ -15,186 +40,153 @@ export function WorkCalendar({
   report,
 }: {
   month: string;
-  onMonth: (v: string) => void;
+  onMonth: (value: string) => void;
   entries: Entry[];
   zone: string;
   onEdit: (id: string) => void;
   onCreate: (date: string) => void;
   report?: Report;
 }) {
-  const [view, setView] = useState<'month' | 'week' | 'agenda'>('month'),
-    [week, setWeek] = useState(0);
-  const events = useMemo(() => toCalendarEvents(entries, Date.now()), [entries]);
-  const first = new Date(`${month}-01T12:00:00Z`);
-  const offset = (first.getUTCDay() + 6) % 7;
-  const start = new Date(first);
-  start.setUTCDate(1 - offset);
-  const cells = Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(start);
-    d.setUTCDate(d.getUTCDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
-  const today = localDate(Date.now(), zone);
-  function move(n: number) {
-    if (view === 'week') {
-      const next = week + n;
-      if (next >= 0 && next < 6) {
-        setWeek(next);
-        return;
+  const [view, setView] = useState<View>('month');
+  const [date, setDate] = useState(() => new TZDate(Date.now(), zone));
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  useEffect(() => {
+    setDate((date) => {
+      if (month && localDate(date.getTime(), zone).slice(0, 7) !== month) {
+        const [year, m] = month.split('-').map(Number);
+        return new TZDate(year, m - 1, 1, 12, 0, 0, zone);
       }
-      setWeek(n > 0 ? 0 : 5);
-    }
-    const d = new Date(first);
-    d.setUTCMonth(d.getUTCMonth() + n);
-    onMonth(d.toISOString().slice(0, 7));
+      return new TZDate(date.getTime(), zone);
+    });
+  }, [month, zone]);
+  const events = useMemo(
+    () =>
+      toCalendarEvents(entries, now).map((event) => ({
+        id: event.id,
+        title: `${event.title} · ${statusText[event.status]}`,
+        start: new Date(event.start),
+        end: new Date(event.end),
+        color: event.status === 'completed' ? '#525252' : '#a3a3a3',
+        draggable: false,
+        resizable: false,
+        data: { entryId: event.entryId, status: event.status },
+      })),
+    [entries, now],
+  );
+  function navigate(next: Date) {
+    const zoned = new TZDate(next.getTime(), zone);
+    setDate(zoned);
+    onMonth(localDate(zoned.getTime(), zone).slice(0, 7));
   }
-  const visible = view === 'week' ? cells.slice(week * 7, week * 7 + 7) : cells;
+  const title =
+    view === 'week'
+      ? `${format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy年 M月d日')} – ${format(endOfWeek(date, { weekStartsOn: 1 }), 'M月d日')}`
+      : format(date, 'yyyy 年 M 月');
   return (
-    <section className="calendar-section">
-      <div className="section-toolbar">
-        <div className="month-heading">
-          <h2>
-            {month.slice(0, 4)} 年 {Number(month.slice(5))} 月
-          </h2>
-          <div className="calendar-nav">
-            <button className="icon-button" aria-label="上一页" onClick={() => move(-1)}>
-              <ChevronLeft size={18} />
-            </button>
-            <button className="icon-button" aria-label="下一页" onClick={() => move(1)}>
-              <ChevronRight size={18} />
-            </button>
-            <button
-              className="today-button"
-              onClick={() => {
-                onMonth(today.slice(0, 7));
-                setWeek(0);
-              }}
+    <section className="calendar-section" aria-label="工作日历">
+      <div className="calendar-toolbar">
+        <div className="calendar-heading">
+          <h2 aria-live="polite">{title}</h2>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="上一页"
+              onClick={() => navigate(view === 'week' ? addWeeks(date, -1) : addMonths(date, -1))}
             >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="下一页"
+              onClick={() => navigate(view === 'week' ? addWeeks(date, 1) : addMonths(date, 1))}
+            >
+              <ChevronRight />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate(new Date())}>
               今天
-            </button>
+            </Button>
           </div>
         </div>
-        <div className="toolbar-right">
-          <div className="view-switch">
-            {(
-              [
-                ['month', '月', CalendarDays],
-                ['week', '周', Columns3],
-                ['agenda', '列表', List],
-              ] as const
-            ).map(([key, label, Icon]) => (
-              <button
-                key={key}
-                aria-pressed={view === key}
-                className={view === key ? 'selected' : ''}
-                onClick={() => setView(key)}
-              >
-                <Icon size={14} />
-                {label}
-              </button>
-            ))}
-          </div>
-          <Button variant="secondary" size="small" onClick={() => onCreate(today)}>
-            <Plus size={15} />
+        <div className="flex items-center gap-3">
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            size="sm"
+            value={view}
+            onValueChange={(value) => {
+              if (value) setView(value as View);
+            }}
+            aria-label="日历视图"
+          >
+            <ToggleGroupItem value="month" aria-label="月">
+              <CalendarDays />月
+            </ToggleGroupItem>
+            <ToggleGroupItem value="week" aria-label="周">
+              <Columns3 />周
+            </ToggleGroupItem>
+            <ToggleGroupItem value="agenda" aria-label="列表">
+              <List />
+              列表
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <Button size="sm" onClick={() => onCreate(localDate(Date.now(), zone))}>
+            <Plus data-icon="inline-start" />
             补录
           </Button>
         </div>
       </div>
-      {view === 'agenda' ? (
-        <div className="agenda">
-          {events
-            .filter(
-              (e) =>
-                localDate(e.start, zone).slice(0, 7) <= month &&
-                localDate(e.end, zone).slice(0, 7) >= month,
-            )
-            .map((e) => (
-              <button className="agenda-row" key={e.id} onClick={() => onEdit(e.entryId)}>
-                <span>{localDate(e.start, zone)}</span>
-                <strong>{e.title}</strong>
-                <span>
-                  {time(e.start, zone)} – {time(e.end, zone)}
-                </span>
-                <span className={`badge ${e.status}`}>{statusText[e.status]}</span>
-              </button>
-            ))}
-          {!events.length && <Empty />}
-        </div>
-      ) : (
-        <>
-          <div className="weekday-row">
-            {weekday.map((w) => (
-              <span key={w}>{w}</span>
-            ))}
+      <EventCalendar
+        className="calendar-canvas"
+        events={events}
+        date={view === 'agenda' ? startOfMonth(date) : date}
+        view={view}
+        timeZone={zone}
+        locale={zhCN}
+        i18n={calendarChinese}
+        weekStartsOn={1}
+        agendaDayCount={getDaysInMonth(date)}
+        scrollToHour={8}
+        interval={60}
+        interactions={{ drag: false, resize: false, selectSlot: false }}
+        onDateChange={navigate}
+        onViewChange={(next) => {
+          if (['month', 'week', 'agenda'].includes(next)) setView(next as View);
+        }}
+        onEventClick={(occurrence) => onEdit(occurrence.event.data!.entryId)}
+        onSlotClick={(slot) => onCreate(localDate(slot.date.getTime(), zone))}
+        enableShortcuts={false}
+        renderEvent={({ occurrence }) => (
+          <div className="calendar-event-content">
+            {occurrence.event.data?.status === 'completed' ? <CircleCheck /> : <CircleDashed />}
+            <span>{occurrence.event.title}</span>
+            <small className="shrink-0 tabular-nums">
+              {time(occurrence.start.getTime(), zone)}
+            </small>
           </div>
-          <div className={`calendar-grid ${view === 'week' ? 'week-grid' : ''}`}>
-            {visible.map((date) => {
-              const dayEvents = events.filter(
-                (e) =>
-                  localDate(e.start, zone) <= date &&
-                  localDate(Math.max(e.start, e.end - 1), zone) >= date,
-              );
-              return (
-                <div
-                  className={`calendar-cell ${date.slice(0, 7) !== month ? 'outside' : ''}`}
-                  key={date}
-                >
-                  <button
-                    className={`day-number ${date === today ? 'is-today' : ''}`}
-                    aria-label={`${date} 补录工作`}
-                    onClick={() => onCreate(date)}
-                  >
-                    {Number(date.slice(8))}
-                  </button>
-                  <div className="day-events">
-                    {dayEvents.slice(0, view === 'week' ? 20 : 3).map((e) => (
-                      <button
-                        key={e.id}
-                        className={`calendar-event ${e.status}`}
-                        onClick={() => onEdit(e.entryId)}
-                        title={`${e.title} ${statusText[e.status]}`}
-                      >
-                        <span className="event-time">
-                          {localDate(e.start, zone) === date ? time(e.start, zone) : '续'}
-                        </span>
-                        <span>{e.title}</span>
-                        {e.status !== 'completed' && <small>{statusText[e.status]}</small>}
-                      </button>
-                    ))}
-                    {view === 'month' && dayEvents.length > 3 && (
-                      <button className="more-events" onClick={() => setView('agenda')}>
-                        还有 {dayEvents.length - 3} 段
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+        )}
+      >
+        <EventCalendarContent />
+      </EventCalendar>
       <footer className="calendar-footer">
-        <span>
-          <i />
-          已完成 <i className="legend-review" />
-          待核对
+        <span className="calendar-legend">
+          <CircleCheck className="size-3" />
+          已完成
+          <CircleDashed className="size-3" />
+          待核对 / 活动记录
         </span>
         <span>
           {report
             ? `${report.workedDayCount} 个工作日 · ${duration(report.durationMs)}`
             : '点击日期补录，点击时段查看详情'}{' '}
-          <span className="zone-label">{zone}</span>
+          · {zone}
         </span>
       </footer>
     </section>
-  );
-}
-function Empty() {
-  return (
-    <div className="empty-state">
-      <CalendarDays size={32} />
-      <h3>这一页，还等你写下</h3>
-      <p>开始一次计时，或补录已经完成的工作。</p>
-    </div>
   );
 }
