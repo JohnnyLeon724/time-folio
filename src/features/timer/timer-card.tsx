@@ -1,7 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Square, Clock3 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -11,15 +11,26 @@ export function TimerCard({
   state,
   enabled,
   onAction,
+  onConfigure,
+  draftTitle,
+  onDraftTitleChange,
 }: {
   state: TimerState;
   enabled: boolean;
   onAction: (op: string, input?: object) => Promise<unknown>;
+  onConfigure?: () => void;
+  draftTitle?: string;
+  onDraftTitleChange?: (title: string) => void;
 }) {
-  const [title, setTitle] = useState(''),
+  const [localTitle, setLocalTitle] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [now, setNow] = useState(Date.now());
+  const title = draftTitle ?? localTitle;
+  function setTitle(value: string) {
+    setLocalTitle(value);
+    onDraftTitleChange?.(value);
+  }
   const composing = useRef(false);
   const anchor = useRef({ server: state.serverNow, local: Date.now() });
   useEffect(() => {
@@ -57,7 +68,9 @@ export function TimerCard({
             ? entry.status === 'running'
               ? '当前任务'
               : '休息结束后可继续'
-            : '输入任务即可开始'}
+            : enabled
+              ? '输入任务即可开始'
+              : '等待确认统计时区'}
         </div>
         {entry ? (
           <h2 className="active-title">{entry.title}</h2>
@@ -100,7 +113,9 @@ export function TimerCard({
           <Clock3 data-icon="inline-start" />
           {entry
             ? '关闭窗口后仍会继续计时，休息时记得暂停。'
-            : '按 Enter 开始，结束后核对实际工作时段。'}
+            : enabled
+              ? '按 Enter 开始，结束后核对实际工作时段。'
+              : '确认时区后即可开始，已填写的任务名会保留。'}
         </p>
       </div>
       <div className="timer-controls">
@@ -111,6 +126,7 @@ export function TimerCard({
           {!entry ? (
             <Button
               disabled={busy || !enabled || !title.trim()}
+              aria-describedby={!enabled ? 'timer-setup-description' : undefined}
               onClick={() => void act('start_timer')}
             >
               <Play data-icon="inline-start" fill="currentColor" />
@@ -140,6 +156,19 @@ export function TimerCard({
           )}
         </div>
       </div>
+      {!enabled && !entry && (
+        <Alert className="basis-full">
+          <AlertTitle>首次使用，请先确认统计时区</AlertTitle>
+          <AlertDescription id="timer-setup-description">
+            <p>统计时区决定工作日期和月度报告的归属。请在设置中预览并确认保存，再开始计时。</p>
+            {onConfigure && (
+              <Button variant="outline" size="sm" onClick={onConfigure}>
+                前往确认时区
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
       {(error || state.storageError) && (
         <Alert variant="destructive" className="timer-error">
           <AlertDescription>{error || state.storageError}</AlertDescription>

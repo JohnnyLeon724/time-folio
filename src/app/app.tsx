@@ -32,6 +32,7 @@ export default function App() {
 function WorkspaceApp() {
   const cache = useQueryClient();
   const [page, setPage] = useState('workspace'),
+    [timerDraftTitle, setTimerDraftTitle] = useState(''),
     [month, setMonth] = useState(''),
     [notice, setNotice] = useState(''),
     [editor, setEditor] = useState<{ entry?: Entry; date: string; revision: string } | null>(null),
@@ -202,6 +203,9 @@ function WorkspaceApp() {
                     state={workspace.timer}
                     enabled={workspace.settings.confirmed}
                     onAction={act}
+                    draftTitle={timerDraftTitle}
+                    onDraftTitleChange={setTimerDraftTitle}
+                    onConfigure={() => setPage('settings')}
                   />
                   <div className="month-strip">
                     <span>
@@ -359,6 +363,7 @@ function WorkspaceApp() {
                   onChanged={() => {
                     setEditor(null);
                     refresh();
+                    if (!workspace.settings.confirmed) setPage('workspace');
                   }}
                   notify={setNotice}
                 />
