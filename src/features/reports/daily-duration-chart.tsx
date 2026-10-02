@@ -1,4 +1,5 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from 'recharts';
+import { NativeSelect } from '@/components/ui/native-select';
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,7 +17,15 @@ export function formatHourTick(value: number) {
   return Number((Number(value) / 3600000).toFixed(1)).toString();
 }
 
-export function DailyDurationChart({ days }: { days: Report['days'] }) {
+export function DailyDurationChart({
+  days,
+  selectedDate = '',
+  onSelectDate,
+}: {
+  days: Report['days'];
+  selectedDate?: string;
+  onSelectDate?: (date: string) => void;
+}) {
   const stepHours = Math.ceil(Math.max(8, ...days.map((day) => day.durationMs / 3600000)) / 4);
   const ticks = Array.from({ length: 5 }, (_, i) => i * stepHours * 3600000);
   return (
@@ -28,6 +37,23 @@ export function DailyDurationChart({ days }: { days: Report['days'] }) {
           已确认工时 · 小时
         </span>
       </div>
+      {onSelectDate && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
+          <span>点击柱形或选择日期查看明细</span>
+          <NativeSelect
+            aria-label="筛选明细日期"
+            value={selectedDate}
+            onChange={(e) => onSelectDate(e.target.value)}
+          >
+            <option value="">整月日期</option>
+            {days.map((day) => (
+              <option key={day.date} value={day.date}>
+                {day.date} · {duration(day.durationMs, true)}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
       <ChartContainer
         config={config}
         className="h-64 w-full"
@@ -78,7 +104,16 @@ export function DailyDurationChart({ days }: { days: Report['days'] }) {
             radius={[4, 4, 0, 0]}
             maxBarSize={28}
             isAnimationActive={false}
-          />
+            onClick={(bar) => onSelectDate?.(bar.payload.date)}
+            cursor={onSelectDate ? 'pointer' : undefined}
+          >
+            {days.map((day) => (
+              <Cell
+                key={day.date}
+                fillOpacity={!selectedDate || day.date === selectedDate ? 1 : 0.3}
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ChartContainer>
       {!days.some((day) => day.durationMs > 0) && (

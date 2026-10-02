@@ -6,15 +6,20 @@ import { Download, CalendarCheck, Clock3, ClipboardCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { duration } from '../../lib/format';
 import type { Report } from '../../services/types';
-export function MonthlyReport({
-  report,
-  onExport,
-  onEdit,
-}: {
+import { useState } from 'react';
+interface Props {
   report: Report;
   onExport: () => void;
   onEdit: (id: string) => void;
-}) {
+  onReview: () => void;
+}
+export function MonthlyReport(props: Props) {
+  return (
+    <ReportContent key={`${props.report.month}-${props.report.reportingTimeZone}`} {...props} />
+  );
+}
+function ReportContent({ report, onExport, onEdit, onReview }: Props) {
+  const [selectedDate, setSelectedDate] = useState('');
   return (
     <>
       <div className="report-heading">
@@ -54,15 +59,24 @@ export function MonthlyReport({
               {report.pendingCount} <small>条待核对</small>
             </strong>
             <p>{report.activeCount} 条活动记录</p>
+            <Button variant="link" onClick={onReview}>
+              查看待核对记录
+            </Button>
           </CardContent>
         </Card>
       </div>
-      <DailyDurationChart days={report.days} />
+      <DailyDurationChart
+        days={report.days}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+      />
       <WorkDetailsTable
         key={report.month}
         rows={report.rows}
         zone={report.reportingTimeZone}
         onEdit={onEdit}
+        selectedDate={selectedDate}
+        onClearDate={() => setSelectedDate('')}
       />
     </>
   );

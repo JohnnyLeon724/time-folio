@@ -249,6 +249,7 @@ function WorkspaceApp() {
                         report={report.data}
                         onExport={() => void exportCsv()}
                         onEdit={edit}
+                        onReview={() => setPage('review')}
                       />
                     </Suspense>
                   ) : (

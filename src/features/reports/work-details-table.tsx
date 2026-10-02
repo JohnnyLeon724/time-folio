@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState, useEffect } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -63,15 +63,20 @@ export function WorkDetailsTable({
   rows,
   zone,
   onEdit,
+  selectedDate = '',
+  onClearDate,
 }: {
   rows: Report['rows'];
   zone: string;
   onEdit: (id: string) => void;
+  selectedDate?: string;
+  onClearDate?: () => void;
 }) {
   const [search, setSearch] = useState('');
   const data = useMemo(() => {
     const groups = new Map<string, Day>();
     for (const period of rows) {
+      if (selectedDate && period.workDate !== selectedDate) continue;
       if (!period.title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())) continue;
       const day = groups.get(period.workDate) ?? {
         date: period.workDate,
@@ -86,7 +91,7 @@ export function WorkDetailsTable({
       ...day,
       periods: day.periods.sort((a, b) => a.startAt - b.startAt),
     }));
-  }, [rows, search]);
+  }, [rows, search, selectedDate]);
   const table = useReactTable({
     data,
     columns,
@@ -100,6 +105,10 @@ export function WorkDetailsTable({
       pagination: { pageIndex: 0, pageSize: 10 },
     },
   });
+  useEffect(() => {
+    table.setPageIndex(0);
+    table.setExpanded(selectedDate ? { [selectedDate]: true } : {});
+  }, [selectedDate, search, table]);
   return (
     <section className="report-table">
       <div className="section-toolbar flex-wrap gap-3">
@@ -117,6 +126,14 @@ export function WorkDetailsTable({
           className="w-full sm:max-w-60"
         />
       </div>
+      {selectedDate && (
+        <div className="flex items-center gap-3 px-4 pb-3 text-sm" role="status">
+          <span>当前日期：{selectedDate}</span>
+          <Button variant="outline" size="sm" onClick={onClearDate}>
+            清除日期筛选
+          </Button>
+        </div>
+      )}
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((group) => (
@@ -190,8 +207,12 @@ export function WorkDetailsTable({
       </Table>
       {!data.length && (
         <EmptyState
-          title={search ? '没有匹配的记录' : '这个月还没有已确认工时'}
-          description={search ? '换个任务名称试试。' : '结束计时并完成核对后，记录会出现在这里。'}
+          title={search || selectedDate ? '没有匹配的记录' : '这个月还没有已确认工时'}
+          description={
+            search || selectedDate
+              ? '当前日期和任务条件下没有已确认时段，请调整搜索或清除日期筛选。'
+              : '结束计时并完成核对后，记录会出现在这里。'
+          }
         />
       )}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground">
