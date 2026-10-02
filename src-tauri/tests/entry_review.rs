@@ -8,6 +8,56 @@ use hourtrail::{
 use std::sync::Arc;
 
 #[test]
+fn correcting_a_conflict_checks_other_records_and_ignores_trash() {
+    let db = Arc::new(Database::open_memory().unwrap());
+    let base = at("2026-10-03T00:00:00+08:00");
+    let clock = TestClock::at(base + 4 * 3600000);
+    let svc = EntryService::new(TimerService::new(db.clone(), clock));
+    let a = svc
+        .save(
+            ctx(&db, None),
+            EntryDetail::manual(
+                "A".into(),
+                vec![WorkSegment::closed("", base, base + 3600000)],
+            ),
+        )
+        .unwrap()
+        .value;
+    let other = svc
+        .save(
+            ctx(&db, None),
+            EntryDetail::manual(
+                "task1-test".into(),
+                vec![WorkSegment::closed("", base + 5278819, base + 5342000)],
+            ),
+        )
+        .unwrap()
+        .value;
+    let mut b = EntryDetail::manual(
+        "B".into(),
+        vec![WorkSegment::closed("", base + 180000, base + 3780000)],
+    );
+    let first = svc.save(ctx(&db, None), b.clone()).unwrap_err();
+    assert_eq!(first.details["entryId"], a.id);
+    b.segments[0].start_at = base + 3600000;
+    b.segments[0].end_at = Some(base + 7200000);
+    let next = svc.save(ctx(&db, None), b.clone()).unwrap_err();
+    assert_eq!(next.details["entryId"], other.id);
+    assert_eq!(next.details["startAt"], base + 5278819);
+    svc.delete(ctx(&db, Some(&other)), &other.id).unwrap();
+    let saved = svc.save(ctx(&db, None), b).unwrap().value;
+    assert_eq!(saved.duration(), 3600000);
+    assert_eq!(
+        svc.list()
+            .unwrap()
+            .iter()
+            .filter(|e| e.deleted_at.is_none())
+            .count(),
+        2
+    );
+}
+
+#[test]
 fn conflict_details_identify_the_exact_period_among_same_named_entries() {
     let db = Arc::new(Database::open_memory().unwrap());
     let clock = TestClock::at(MIN_TIME + 10000);

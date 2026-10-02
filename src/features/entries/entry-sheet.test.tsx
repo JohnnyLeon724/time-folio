@@ -165,6 +165,68 @@ it('locates a conflict and lets the user inspect it without replacing the draft'
   expect(screen.queryByRole('alert', { name: '时段 1 时间冲突' })).not.toBeInTheDocument();
 });
 
+it('submits corrected picker times after returning from conflict details', async () => {
+  Element.prototype.scrollIntoView = vi.fn();
+  const at = (time: string) => Date.parse(`2026-10-03T${time}+08:00`);
+  const entry = {
+    ...example,
+    segments: [{ ...example.segments[0], startAt: at('00:03:00'), endAt: at('01:03:00') }],
+  };
+  const other = {
+    ...example,
+    id: 'other',
+    title: 'A',
+    segments: [{ ...example.segments[0], startAt: at('00:00:00'), endAt: at('01:00:00') }],
+  };
+  const { onSaved } = openEditor({ entry });
+  const requests: { entry: Entry; context: { requestId: string } }[] = [];
+  vi.mocked(command).mockImplementation(async (op, input) => {
+    if (op === 'parse_local') return Date.parse(`${(input as { value: string }).value}+08:00`);
+    if (op === 'get_workspace') return { entries: [other] };
+    if (op === 'save_entry') {
+      const request = input as (typeof requests)[number];
+      requests.push(structuredClone(request));
+      if (requests.length === 1)
+        throw {
+          code: 'OVERLAP',
+          message: '时间重叠',
+          details: {
+            segmentId: 's1',
+            entryId: other.id,
+            title: 'A',
+            startAt: at('00:00:00'),
+            endAt: at('01:00:00'),
+          },
+        };
+      return { value: request.entry, workspaceRevision: 'next' };
+    }
+    return 0;
+  });
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  fireEvent.click(await screen.findByRole('button', { name: '查看冲突记录' }));
+  const dialog = screen.getByRole('dialog', { name: '冲突记录' });
+  await within(dialog).findByText('A');
+  fireEvent.click(within(dialog).getByRole('button', { name: '返回编辑' }));
+  for (const [label, option] of [
+    ['时段 1 开始时', '01时'],
+    ['时段 1 开始分', '00分'],
+    ['时段 1 结束时', '02时'],
+    ['时段 1 结束分', '00分'],
+  ]) {
+    fireEvent.keyDown(screen.getByRole('combobox', { name: label }), { key: 'ArrowDown' });
+    fireEvent.click(screen.getByRole('option', { name: option }));
+  }
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '保存记录' }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledOnce());
+  expect(requests).toHaveLength(2);
+  expect(requests[1].entry.segments[0]).toMatchObject({
+    startAt: at('01:00:00'),
+    endAt: at('02:00:00'),
+  });
+  expect(requests[1].context.requestId).not.toBe(requests[0].context.requestId);
+});
+
 it('keeps the draft when the conflicting record cannot be read and offers retry', async () => {
   openEditor();
   vi.mocked(command).mockImplementation(async (op) => {
