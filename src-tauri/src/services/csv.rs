@@ -21,16 +21,7 @@ pub fn bytes(report: &MonthReport) -> Result<Vec<u8>> {
         .from_writer(Vec::new());
     let err = |e: csv::Error| AppError::new("IO_ERROR", e.to_string());
     writer
-        .write_record([
-            "workDate",
-            "taskTitle",
-            "startAt",
-            "endAt",
-            "reportingTimeZone",
-            "durationMs",
-            "decimalHours",
-            "note",
-        ])
+        .write_record(["日期", "任务", "开始时间", "结束时间", "时长"])
         .map_err(err)?;
     let tz = zone(&report.reporting_time_zone)?;
     for r in &report.rows {
@@ -41,15 +32,12 @@ pub fn bytes(report: &MonthReport) -> Result<Vec<u8>> {
                 tz.timestamp_millis_opt(r.start_at)
                     .single()
                     .unwrap()
-                    .to_rfc3339_opts(SecondsFormat::Millis, false),
+                    .to_rfc3339_opts(SecondsFormat::AutoSi, false),
                 tz.timestamp_millis_opt(r.end_at)
                     .single()
                     .unwrap()
-                    .to_rfc3339_opts(SecondsFormat::Millis, false),
-                report.reporting_time_zone.clone(),
-                r.duration_ms.to_string(),
-                format!("{:.6}", r.duration_ms as f64 / 3600000.0),
-                cell(r.note.as_deref().unwrap_or("")),
+                    .to_rfc3339_opts(SecondsFormat::AutoSi, false),
+                elapsed(r.duration_ms),
             ])
             .map_err(err)?;
     }
@@ -60,6 +48,20 @@ pub fn bytes(report: &MonthReport) -> Result<Vec<u8>> {
             .map_err(|e| AppError::new("IO_ERROR", e.to_string()))?,
     );
     Ok(result)
+}
+fn elapsed(ms: i64) -> String {
+    let seconds = ms / 1000;
+    let base = format!(
+        "{:02}:{:02}:{:02}",
+        seconds / 3600,
+        seconds / 60 % 60,
+        seconds % 60
+    );
+    if ms % 1000 == 0 {
+        base
+    } else {
+        format!("{base}.{:03}", ms % 1000)
+    }
 }
 pub fn export(report: &MonthReport, path: &Path) -> Result<()> {
     atomic_write(path, &bytes(report)?)
