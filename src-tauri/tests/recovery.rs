@@ -6,6 +6,99 @@ use hourtrail::{
     services::{recovery::RecoveryService, timer::TimerService},
 };
 use std::sync::Arc;
+
+#[test]
+fn checkpoint_gap_boundary_requires_review_only_above_sixty_seconds() {
+    for (gap, needs_review) in [(60000, false), (61000, true)] {
+        let db = Arc::new(Database::open_memory().unwrap());
+        let start = MIN_TIME + 100;
+        let clock = TestClock::at(start);
+        let timer = TimerService::new(db.clone(), clock.clone());
+        timer
+            .start(ctx(&db, None), "边界测试".into(), None)
+            .unwrap();
+        let recovery = RecoveryService::new(timer.clone());
+        clock.set(start + 15000);
+        recovery.checkpoint().unwrap();
+        clock.set(start + 15000 + gap);
+        recovery.checkpoint().unwrap();
+        let entry = db.read(hourtrail::db::records::all).unwrap().remove(0);
+        if needs_review {
+            assert_eq!(entry.status, Status::NeedsReview);
+            assert_eq!(entry.duration(), 15000);
+            assert_eq!(entry.review_items[0].reason, "interruption");
+            assert_eq!(
+                entry.review_items[0].candidate_start_at,
+                Some(start + 15000)
+            );
+            assert_eq!(
+                entry.review_items[0].candidate_end_at,
+                Some(start + 15000 + gap)
+            );
+            assert!(timer.state().unwrap().active_entry.is_none());
+        } else {
+            assert_eq!(entry.status, Status::Running);
+            assert!(entry.review_items.is_empty());
+        }
+    }
+}
+
+#[test]
+fn sleeping_while_paused_does_not_add_work_or_resume_the_timer() {
+    let db = Arc::new(Database::open_memory().unwrap());
+    let start = MIN_TIME + 100;
+    let clock = TestClock::at(start);
+    let timer = TimerService::new(db.clone(), clock.clone());
+    let entry = timer
+        .start(ctx(&db, None), "暂停休眠".into(), None)
+        .unwrap()
+        .value;
+    clock.set(start + 1000);
+    let paused = timer
+        .pause(ctx(&db, Some(&entry)), &entry.id)
+        .unwrap()
+        .value;
+    let recovery = RecoveryService::new(timer.clone());
+    recovery.suspend().unwrap();
+    clock.set(start + 3600000);
+    recovery.resume().unwrap();
+    recovery.checkpoint().unwrap();
+    assert_eq!(timer.state().unwrap().active_entry.unwrap(), paused);
+    assert_eq!(paused.duration(), 1000);
+    assert!(paused.review_items.is_empty());
+}
+
+#[test]
+fn reopening_a_disk_workspace_recovers_the_persisted_checkpoint() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("isolated-workspace.db");
+    let start = MIN_TIME + 100;
+    let clock = TestClock::at(start);
+    {
+        let db = Arc::new(Database::open(&path).unwrap());
+        let timer = TimerService::new(db.clone(), clock.clone());
+        timer
+            .start(ctx(&db, None), "磁盘恢复".into(), None)
+            .unwrap();
+        clock.set(start + 15000);
+        RecoveryService::new(timer).checkpoint().unwrap();
+    }
+    clock.set(start + 86400000);
+    let db = Arc::new(Database::open(&path).unwrap());
+    let timer = TimerService::new(db.clone(), clock);
+    let recovery = RecoveryService::new(timer.clone());
+    recovery.recover_on_startup().unwrap();
+    recovery.recover_on_startup().unwrap();
+    let entry = db.read(hourtrail::db::records::all).unwrap().remove(0);
+    assert_eq!(entry.duration(), 15000);
+    assert_eq!(entry.status, Status::NeedsReview);
+    assert_eq!(entry.review_items.len(), 1);
+    assert_eq!(
+        entry.review_items[0].candidate_start_at,
+        Some(start + 15000)
+    );
+    assert!(timer.state().unwrap().active_entry.is_none());
+}
 #[test]
 fn sleep_wake_is_review_not_auto_resume() {
     let db = Arc::new(Database::open_memory().unwrap());
