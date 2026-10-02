@@ -1,16 +1,9 @@
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
-import { EmptyState } from '@/components/empty-state';
+import { WorkDetailsTable } from './work-details-table';
+
 import { Download, CalendarCheck, Clock3, ClipboardCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { duration, time } from '../../lib/format';
+import { duration } from '../../lib/format';
 import type { Report } from '../../services/types';
 export function MonthlyReport({
   report,
@@ -77,49 +70,12 @@ export function MonthlyReport({
           ))}
         </div>
       </section>
-      <section className="report-table">
-        <div className="section-toolbar">
-          <h2>工作明细</h2>
-          <span className="muted">仅包含已确认记录</span>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>日期</TableHead>
-              <TableHead>任务</TableHead>
-              <TableHead>工作时段</TableHead>
-              <TableHead>时长</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.rows.map((r, i) => (
-              <TableRow key={`${r.entryId}-${i}`}>
-                <TableCell>{r.workDate}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="link"
-                    className="h-auto p-0 text-left whitespace-normal"
-                    onClick={() => onEdit(r.entryId)}
-                  >
-                    {r.title}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  {time(r.startAt, report.reportingTimeZone)} –{' '}
-                  {time(r.endAt, report.reportingTimeZone)}
-                </TableCell>
-                <TableCell>{duration(r.durationMs)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {!report.rows.length && (
-          <EmptyState
-            title="这个月还没有已确认工时"
-            description="结束计时并完成核对后，记录会出现在这里。"
-          />
-        )}
-      </section>
+      <WorkDetailsTable
+        key={report.month}
+        rows={report.rows}
+        zone={report.reportingTimeZone}
+        onEdit={onEdit}
+      />
     </>
   );
 }
