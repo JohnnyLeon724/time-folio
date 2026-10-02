@@ -12,6 +12,10 @@ const config = {
   durationMs: { label: '已确认工时', color: 'var(--work-completed)' },
 } satisfies ChartConfig;
 
+export function formatHourTick(value: number) {
+  return Number((Number(value) / 3600000).toFixed(1)).toString();
+}
+
 export function DailyDurationChart({ days }: { days: Report['days'] }) {
   const stepHours = Math.ceil(Math.max(8, ...days.map((day) => day.durationMs / 3600000)) / 4);
   const ticks = Array.from({ length: 5 }, (_, i) => i * stepHours * 3600000);
@@ -32,7 +36,7 @@ export function DailyDurationChart({ days }: { days: Report['days'] }) {
         <BarChart
           accessibilityLayer
           data={days}
-          margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+          margin={{ top: 12, right: 12, left: 8, bottom: 0 }}
         >
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis
@@ -44,12 +48,12 @@ export function DailyDurationChart({ days }: { days: Report['days'] }) {
             minTickGap={8}
           />
           <YAxis
-            tickFormatter={(value) => `${Number(value) / 3600000}`}
+            tickFormatter={formatHourTick}
             domain={[0, ticks[4]]}
             ticks={ticks}
             tickLine={false}
             axisLine={false}
-            width={36}
+            width={44}
           />
           <ChartTooltip
             cursor={{ fill: 'var(--muted)', opacity: 0.6 }}
