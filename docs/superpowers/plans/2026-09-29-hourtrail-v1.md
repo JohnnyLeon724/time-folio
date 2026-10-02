@@ -1,5 +1,7 @@
 # HourTrail V1 Implementation Plan
 
+> 2026-10-03 执行记录：仓库已包含应用实现，当前测试证据、发布构建及剩余验收项见[发布验收记录](../../release-checklist.md)。下文保留原计划；未勾选步骤与文中的初始目录说明不代表当前代码状态，也不代表整项任务已经验收。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 交付离线桌面应用，支持可靠的实时计时、核对、月度报告和 Windows/macOS 双向迁移。
