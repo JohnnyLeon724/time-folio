@@ -50,12 +50,48 @@ it('closes an unchanged editor without a confirmation', () => {
   expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 });
 
+it('adds the next period after the previous end across midnight', () => {
+  openEditor({
+    entry: {
+      ...example,
+      segments: [
+        {
+          ...example.segments[0],
+          startAt: Date.parse('2026-10-03T14:30:00Z'),
+          endAt: Date.parse('2026-10-03T15:30:00Z'),
+        },
+      ],
+    },
+  });
+  fireEvent.click(screen.getByRole('button', { name: '添加时段' }));
+  expect(screen.getByRole('textbox', { name: '时段 2 开始时间输入' })).toHaveValue('23:30:00');
+  expect(screen.getByRole('textbox', { name: '时段 2 结束时间输入' })).toHaveValue('00:30:00');
+  expect(screen.getByRole('button', { name: '时段 2 结束日期' })).toHaveTextContent('2026-10-04');
+});
+
 it('does not prompt after reverting a title edit', () => {
   const { onClose } = openEditor();
   fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: '临时修改' } });
   fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: example.title } });
   fireEvent.click(screen.getByRole('button', { name: '取消' }));
   expect(onClose).toHaveBeenCalledOnce();
+});
+
+it('protects an unfinished typed time and refuses to save invalid input', async () => {
+  const { onClose, onSaved } = openEditor();
+  fireEvent.change(screen.getByRole('textbox', { name: '时段 1 开始时间输入' }), {
+    target: { value: '25:' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: '取消' }));
+  expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: '继续编辑' }));
+  fireEvent.submit(screen.getByRole('button', { name: '保存记录' }).closest('form')!);
+  await waitFor(() =>
+    expect(screen.getByRole('textbox', { name: '时段 1 开始时间输入' })).toBeInvalid(),
+  );
+  expect(onClose).not.toHaveBeenCalled();
+  expect(onSaved).not.toHaveBeenCalled();
+  expect(vi.mocked(command).mock.calls.some(([op]) => op === 'save_entry')).toBe(false);
 });
 
 it('protects a changed review choice without adding a period', () => {

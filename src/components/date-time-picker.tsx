@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
+import { Input } from '@/components/ui/input';
+import { shiftWallMinutes } from '@/lib/wall-clock';
 import { zhCN } from 'date-fns/locale';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +33,24 @@ export function DateTimePicker({
   const [year, month, day] = datePart.split('-').map(Number);
   const selected = datePart ? new Date(year, month - 1, day, 12) : undefined;
   const parts = timePart.split(':');
+  const [draft, setDraft] = useState(value ? timePart : '');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const errorId = useId();
+  const valid = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.test(draft);
+  const invalid = !disabled && !!datePart && !valid;
+  const message = '请输入 HH:mm 或 HH:mm:ss，例如 09:30。';
+  useEffect(() => {
+    setDraft(value ? timePart : '');
+  }, [value, timePart]);
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(invalid ? message : '');
+  }, [invalid]);
+  function commitTime() {
+    if (!valid || !datePart) return;
+    const next = draft.length === 5 ? `${draft}:${parts[2] || '00'}` : draft;
+    setDraft(next);
+    onChange(`${datePart}T${next}`);
+  }
   return (
     <div role="group" aria-label={label} className="flex min-w-0 flex-col gap-2">
       <Popover open={open} onOpenChange={setOpen}>
@@ -74,6 +94,46 @@ export function DateTimePicker({
           />
         </PopoverContent>
       </Popover>
+      <Input
+        ref={inputRef}
+        aria-label={`${label}时间输入`}
+        aria-invalid={invalid}
+        data-time-dirty={draft !== (value ? timePart : '')}
+        aria-describedby={invalid ? errorId : undefined}
+        disabled={disabled || !datePart}
+        placeholder="HH:mm:ss"
+        value={draft}
+        className="tabular-nums"
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commitTime}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            commitTime();
+          }
+        }}
+      />
+      {invalid && (
+        <p id={errorId} role="alert" className="text-xs text-destructive">
+          {message}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-1">
+        {[-15, -5, 5, 15].map((minutes) => (
+          <Button
+            key={minutes}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled || !datePart || invalid}
+            aria-label={`${label}${minutes < 0 ? '减少' : '增加'} ${Math.abs(minutes)} 分钟`}
+            onClick={() => onChange(shiftWallMinutes(value, minutes))}
+          >
+            {minutes > 0 ? '+' : ''}
+            {minutes} 分
+          </Button>
+        ))}
+      </div>
       <div className="grid grid-cols-3 gap-1">
         {['时', '分', '秒'].map((unit, index) => (
           <Select

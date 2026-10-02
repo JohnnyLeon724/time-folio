@@ -17,6 +17,7 @@ import type { Entry, Context, AppError, Mutation } from '../../services/types';
 import { duration, localInput, statusText } from '../../lib/format';
 import { cn } from 'cn';
 import { ConflictRecordDialog } from './conflict-record-dialog';
+import { shiftWallMinutes } from '@/lib/wall-clock';
 const schema = z.object({
   title: z
     .string()
@@ -83,6 +84,7 @@ export function EntrySheet({
   const [reviews, setReviews] = useState(entry?.reviewItems ?? []);
   const initialPeriods = useRef(JSON.stringify({ rows, reviews })).current;
   const saving = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [previewMs, setPreviewMs] = useState<number | null>(null);
   const [conflict, setConflict] = useState<Conflict | null>(null);
   const [viewConflict, setViewConflict] = useState(false);
@@ -111,6 +113,7 @@ export function EntrySheet({
     if (saving.current || deleteConfirm || discardConfirm || viewConflict) return;
     const form = getValues();
     const changed =
+      !!formRef.current?.querySelector('[data-time-dirty="true"]') ||
       form.title !== (entry?.title ?? '') ||
       form.note !== (entry?.note ?? '') ||
       JSON.stringify({ rows, reviews }) !== initialPeriods;
@@ -183,6 +186,7 @@ export function EntrySheet({
     };
   }, [rows, zone]);
   async function save(continueTimer = false) {
+    if (formRef.current && !formRef.current.reportValidity()) return;
     if (saving.current) return;
     saving.current = true;
     setBusy(true);
@@ -305,7 +309,7 @@ export function EntrySheet({
       description={`所有时间均使用 ${zone}。${entry ? statusText[entry.status] : '保存后计入正式报表。'}`}
       onClose={requestClose}
     >
-      <form onSubmit={handleSubmit(() => save())} className="entry-form">
+      <form ref={formRef} onSubmit={handleSubmit(() => save())} className="entry-form">
         <Field>
           <FieldLabel htmlFor="entry-title">任务标题</FieldLabel>
           <Input
@@ -327,7 +331,11 @@ export function EntrySheet({
               onClick={() =>
                 setRows((old) => [
                   ...old,
-                  { id: crypto.randomUUID(), start: `${date}T09:00:00`, end: `${date}T10:00:00` },
+                  {
+                    id: crypto.randomUUID(),
+                    start: old.at(-1)?.end || `${date}T09:00:00`,
+                    end: shiftWallMinutes(old.at(-1)?.end || `${date}T09:00:00`, 60),
+                  },
                 ])
               }
             >
@@ -412,6 +420,11 @@ export function EntrySheet({
                   )}
                 </AlertDescription>
               </Alert>
+            )}
+            {!active && row.end && row.start && row.end <= row.start && (
+              <p role="alert" className="col-span-full text-xs text-destructive">
+                结束时间必须晚于开始时间；跨午夜请将结束日期改为次日。
+              </p>
             )}
           </div>
         ))}
