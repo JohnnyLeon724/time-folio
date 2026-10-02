@@ -1,6 +1,6 @@
 import { WorkspaceLayout } from './workspace-layout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
+import { MonthPicker } from '@/components/date-time-picker';
 import { EmptyState } from '@/components/empty-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialogCancel } from '@/components/ui/alert-dialog';
@@ -235,14 +235,10 @@ function WorkspaceApp() {
               )}
               {page === 'report' && (
                 <>
-                  <label className="month-picker">
+                  <div className="month-picker">
                     报告月份
-                    <Input
-                      type="month"
-                      value={month}
-                      onChange={(e) => e.target.value && setMonth(e.target.value)}
-                    />
-                  </label>
+                    <MonthPicker value={month} onChange={setMonth} />
+                  </div>
                   {report.data ? (
                     <MonthlyReport
                       report={report.data}

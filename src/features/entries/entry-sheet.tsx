@@ -1,3 +1,4 @@
+import { DateTimePicker } from '@/components/date-time-picker';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -274,31 +275,25 @@ export function EntrySheet({
         {rows.map((row, i) => (
           <div className="segment-row" key={row.id}>
             <span className="segment-index">{i + 1}</span>
-            <label>
+            <div className="segment-field">
               <span>开始</span>
-              <Input
-                type="datetime-local"
-                step="1"
-                aria-label={`时段 ${i + 1} 开始`}
+              <DateTimePicker
+                label={`时段 ${i + 1} 开始`}
                 value={row.start}
                 disabled={active}
-                onChange={(e) => change(row.id, 'start', e.target.value)}
-                required
+                onChange={(value) => change(row.id, 'start', value)}
               />
-            </label>
+            </div>
             <span className="segment-separator">至</span>
-            <label>
+            <div className="segment-field">
               <span>结束</span>
-              <Input
-                type="datetime-local"
-                step="1"
-                aria-label={`时段 ${i + 1} 结束`}
+              <DateTimePicker
+                label={`时段 ${i + 1} 结束`}
                 value={row.end}
                 disabled={active}
-                onChange={(e) => change(row.id, 'end', e.target.value)}
-                required={!active}
+                onChange={(value) => change(row.id, 'end', value)}
               />
-            </label>
+            </div>
             {!active && (
               <Button
                 type="button"
