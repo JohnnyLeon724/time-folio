@@ -2,7 +2,8 @@ import { Input } from '@/components/ui/input';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { recentTitles, type RecentEntry } from './recent-titles';
 import { Play, Pause, Square, Clock3 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { duration } from '../../lib/format';
@@ -14,6 +15,7 @@ export function TimerCard({
   onConfigure,
   draftTitle,
   onDraftTitleChange,
+  recentEntries = [],
 }: {
   state: TimerState;
   enabled: boolean;
@@ -21,12 +23,23 @@ export function TimerCard({
   onConfigure?: () => void;
   draftTitle?: string;
   onDraftTitleChange?: (title: string) => void;
+  recentEntries?: readonly RecentEntry[];
 }) {
   const [localTitle, setLocalTitle] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [now, setNow] = useState(Date.now());
   const title = draftTitle ?? localTitle;
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const suggestions = useMemo(() => recentTitles(recentEntries, title), [recentEntries, title]);
+  const showSuggestions = suggestionsOpen && !busy && suggestions.length > 0;
+  const selectedIndex = selectedTitle === null ? -1 : suggestions.indexOf(selectedTitle);
+  function chooseTitle(value: string) {
+    setTitle(value);
+    setSuggestionsOpen(false);
+    setSelectedTitle(null);
+  }
   function setTitle(value: string) {
     setLocalTitle(value);
     onDraftTitleChange?.(value);
@@ -86,7 +99,25 @@ export function TimerCard({
               placeholder="现在准备做什么？"
               value={title}
               maxLength={400}
-              onChange={(e) => setTitle(e.target.value)}
+              role="combobox"
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-expanded={showSuggestions}
+              aria-controls={showSuggestions ? 'recent-task-titles' : undefined}
+              aria-activedescendant={
+                showSuggestions && selectedIndex >= 0 ? `recent-task-${selectedIndex}` : undefined
+              }
+              disabled={busy}
+              onFocus={() => setSuggestionsOpen(true)}
+              onBlur={() => {
+                setSuggestionsOpen(false);
+                setSelectedTitle(null);
+              }}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setSuggestionsOpen(true);
+                setSelectedTitle(null);
+              }}
               onCompositionStart={() => {
                 composing.current = true;
               }}
@@ -94,6 +125,30 @@ export function TimerCard({
                 composing.current = false;
               }}
               onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing || composing.current || busy) return;
+                if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && suggestions.length) {
+                  e.preventDefault();
+                  setSuggestionsOpen(true);
+                  const next =
+                    e.key === 'ArrowDown'
+                      ? (selectedIndex + 1) % suggestions.length
+                      : selectedIndex <= 0
+                        ? suggestions.length - 1
+                        : selectedIndex - 1;
+                  setSelectedTitle(suggestions[next]);
+                  return;
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  setSuggestionsOpen(false);
+                  setSelectedTitle(null);
+                  return;
+                }
+                if (e.key === 'Enter' && showSuggestions && selectedIndex >= 0) {
+                  e.preventDefault();
+                  chooseTitle(suggestions[selectedIndex]);
+                  return;
+                }
                 if (
                   e.key === 'Enter' &&
                   !e.nativeEvent.isComposing &&
@@ -107,6 +162,34 @@ export function TimerCard({
                 }
               }}
             />
+            {showSuggestions && (
+              <div>
+                <p className="text-sm text-muted-foreground">最近任务 · 选择后可编辑标题</p>
+                <div
+                  id="recent-task-titles"
+                  role="listbox"
+                  aria-label="最近任务"
+                  className="flex flex-col gap-1"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <Button
+                      key={suggestion}
+                      id={`recent-task-${index}`}
+                      type="button"
+                      role="option"
+                      aria-selected={selectedIndex === index}
+                      variant={selectedIndex === index ? 'secondary' : 'ghost'}
+                      className="justify-start"
+                      tabIndex={-1}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => chooseTitle(suggestion)}
+                    >
+                      <span className="truncate">{suggestion}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </Field>
         )}
         <p className="timer-hint">

@@ -205,6 +205,7 @@ function WorkspaceApp() {
                     </span>
                   </div>
                   <TimerCard
+                    recentEntries={workspace.entries}
                     state={workspace.timer}
                     enabled={workspace.settings.confirmed}
                     onAction={act}

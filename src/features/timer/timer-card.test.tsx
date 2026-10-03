@@ -67,3 +67,69 @@ describe('TimerCard', () => {
     expect(onAction).not.toHaveBeenCalled();
   });
 });
+
+const idle = {
+  activeEntry: null,
+  closedDurationMs: 0,
+  serverNow: 0,
+  workspaceRevision: 'v',
+  storageError: null,
+};
+const history = [{ id: 'old', title: '阅读', createdAt: 1, deletedAt: null }];
+describe('recent task reuse', () => {
+  it('selects with keyboard before starting a fresh editable title', async () => {
+    const onAction = vi.fn().mockResolvedValue({});
+    render(<TimerCard state={idle} enabled onAction={onAction} recentEntries={history} />);
+    const input = screen.getByRole('combobox', { name: '任务标题' });
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(input).toHaveValue('阅读');
+    expect(onAction).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { value: '阅读第二章' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() =>
+      expect(onAction).toHaveBeenCalledWith('start_timer', { title: '阅读第二章' }),
+    );
+    expect(history[0].title).toBe('阅读');
+  });
+  it('supports pointer selection, escape and IME without starting', () => {
+    const onAction = vi.fn();
+    render(<TimerCard state={idle} enabled onAction={onAction} recentEntries={history} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.compositionStart(input);
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+    expect(input).toHaveValue('');
+    fireEvent.compositionEnd(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    fireEvent.focus(input);
+    fireEvent.click(screen.getByRole('option', { name: '阅读' }));
+    expect(input).toHaveValue('阅读');
+    expect(onAction).not.toHaveBeenCalled();
+  });
+  it.each(['running', 'paused'] as const)('does not offer new tasks while %s', (status) => {
+    const entry = {
+      ...history[0],
+      status,
+      segments: [],
+      note: null,
+      source: 'timer' as const,
+      version: 1,
+      updatedAt: 1,
+      reviewItems: [],
+    };
+    render(
+      <TimerCard
+        state={{ ...idle, activeEntry: entry }}
+        enabled
+        onAction={vi.fn()}
+        recentEntries={history}
+      />,
+    );
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '开始工作' })).not.toBeInTheDocument();
+  });
+});
