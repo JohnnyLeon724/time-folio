@@ -145,11 +145,11 @@ function WorkspaceApp() {
     try {
       const destination = await save({
         defaultPath: `timefolio-timesheet-${month}.csv`,
-        filters: [{ name: 'CSV 工时表', extensions: ['csv'] }],
+        filters: [{ name: 'CSV 时间记录表', extensions: ['csv'] }],
       });
       if (!destination) return;
       await command('export_month_csv', { month, destination });
-      setNotice(`工时表已保存：${destination}`);
+      setNotice(`时间记录表已保存：${destination}`);
     } catch (e) {
       setNotice((e as AppError).message);
     }
@@ -165,7 +165,7 @@ function WorkspaceApp() {
         {!desktop ? (
           <div className="browser-note">
             <img src={logoUrl} alt="Timefolio Logo" width={64} height={64} className="rounded-xl" />
-            <h1>Timefolio 桌面工作台</h1>
+            <h1>Timefolio 桌面应用</h1>
             <p>请启动桌面应用，使用本地计时、日历和备份功能。</p>
           </div>
         ) : query.isPending ? (
@@ -191,8 +191,8 @@ function WorkspaceApp() {
                 <>
                   <div className="page-heading workspace-title">
                     <div>
-                      <p className="eyebrow">工作空间</p>
-                      <h1>记录每一段工作</h1>
+                      <p className="eyebrow">我的时间</p>
+                      <h1>记录每一段投入</h1>
                     </div>
                     <span className="muted">
                       {new Intl.DateTimeFormat('zh-CN', {
@@ -214,10 +214,10 @@ function WorkspaceApp() {
                   />
                   <div className="month-strip">
                     <span>
-                      已确认工时 <small>{month}</small>
+                      已确认时长 <small>{month}</small>
                     </span>
                     <strong>{duration(formalMs)}</strong>
-                    <span>{report.data?.workedDayCount ?? 0} 个工作日</span>
+                    <span>{report.data?.workedDayCount ?? 0} 个记录日</span>
                     <Button variant="ghost" size="sm" onClick={() => setPage('review')}>
                       {pending.length ? `${pending.length} 条记录待核对` : '记录已核对'}
                       <Check size={14} />
@@ -259,10 +259,10 @@ function WorkspaceApp() {
               {(page === 'review' || page === 'trash') && (
                 <>
                   <div className="page-heading">
-                    <h1>{page === 'review' ? '待核对的工作' : '回收站'}</h1>
+                    <h1>{page === 'review' ? '待核对的记录' : '回收站'}</h1>
                     <p>
                       {page === 'review'
-                        ? '确认实际工作的时间，完成后才计入正式工时。'
+                        ? '确认实际投入的时间，完成后才计入已确认时长。'
                         : '删除的记录保留在这里，可以随时找回。'}
                     </p>
                   </div>
@@ -346,8 +346,8 @@ function WorkspaceApp() {
                         title={page === 'review' ? '目前没有待核对记录' : '回收站是空的'}
                         description={
                           page === 'review'
-                            ? '安心投入下一段工作吧。'
-                            : '删除的工作记录会出现在这里。'
+                            ? '可以开始下一次计时了。'
+                            : '删除的时间记录会出现在这里。'
                         }
                       />
                     )}
@@ -398,7 +398,7 @@ function WorkspaceApp() {
           onSaved={() => {
             setEditor(null);
             refresh();
-            setNotice('工作记录已保存');
+            setNotice('时间记录已保存');
             if (quitAfterReview) {
               setQuitAfterReview(false);
               void command('prepare_quit').catch((e) => setNotice((e as AppError).message));

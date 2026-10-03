@@ -16,7 +16,7 @@ vi.mock('./workspace-layout', () => ({
     onPage: (page: string) => void;
   }) => (
     <>
-      <button onClick={() => onPage('workspace')}>工作日历</button>
+      <button onClick={() => onPage('workspace')}>时间日历</button>
       {children}
     </>
   ),
@@ -59,11 +59,11 @@ it('preserves the task draft through first-use timezone setup and enables start 
   });
   render(<App />);
   await screen.findByRole('button', { name: '完成时区确认' });
-  fireEvent.click(screen.getByRole('button', { name: '工作日历' }));
+  fireEvent.click(screen.getByRole('button', { name: '时间日历' }));
   fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: '完成计时功能' } });
-  expect(screen.getByRole('button', { name: '开始工作' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '开始计时' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: '前往确认时区' }));
   fireEvent.click(screen.getByRole('button', { name: '完成时区确认' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: '开始工作' })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole('button', { name: '开始计时' })).toBeEnabled());
   expect(screen.getByLabelText('任务标题')).toHaveValue('完成计时功能');
 });

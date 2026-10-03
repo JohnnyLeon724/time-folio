@@ -209,7 +209,7 @@ pub fn validate(b: &Backup, now: i64) -> Result<()> {
     }
     intervals.sort_unstable();
     if intervals.windows(2).any(|w| w[1].0 < w[0].1) {
-        return Err(AppError::new("OVERLAP", "备份中的正式工作时间重叠"));
+        return Err(AppError::new("OVERLAP", "备份中的已确认时段重叠"));
     }
     Ok(())
 }

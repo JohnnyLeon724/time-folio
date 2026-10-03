@@ -26,7 +26,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "shortDescription": "离线工作时间记录",
+    "shortDescription": "离线时间记录",
     "category": "Productivity",
     "icon": [
       "icons/32x32.png",

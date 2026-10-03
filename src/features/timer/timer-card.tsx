@@ -71,7 +71,7 @@ export function TimerCard({
     }
   }
   return (
-    <section className="timer-card" aria-label="工作计时">
+    <section className="timer-card" aria-label="计时">
       <div className="timer-main">
         <div className="timer-label">
           <Badge variant={entry?.status === 'running' ? 'default' : 'secondary'}>
@@ -197,7 +197,7 @@ export function TimerCard({
           {entry
             ? '关闭窗口后仍会继续计时，休息时记得暂停。'
             : enabled
-              ? '按 Enter 开始，结束后核对实际工作时段。'
+              ? '按 Enter 开始，结束后核对实际投入时段。'
               : '确认时区后即可开始，已填写的任务名会保留。'}
         </p>
       </div>
@@ -213,7 +213,7 @@ export function TimerCard({
               onClick={() => void act('start_timer')}
             >
               <Play data-icon="inline-start" fill="currentColor" />
-              开始工作
+              开始计时
             </Button>
           ) : (
             <>
@@ -243,7 +243,7 @@ export function TimerCard({
         <Alert className="basis-full">
           <AlertTitle>首次使用，请先确认统计时区</AlertTitle>
           <AlertDescription id="timer-setup-description">
-            <p>统计时区决定工作日期和月度报告的归属。请在设置中预览并确认保存，再开始计时。</p>
+            <p>统计时区决定记录日期及周报、月报的归属。请在设置中预览并确认保存，再开始计时。</p>
             {onConfigure && (
               <Button variant="outline" size="sm" onClick={onConfigure}>
                 前往确认时区

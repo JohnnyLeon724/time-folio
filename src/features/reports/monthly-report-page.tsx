@@ -54,14 +54,14 @@ function ReportContent({ report, onExport, onEdit, onReview }: Props) {
         <Card>
           <CardContent className="flex flex-col gap-3">
             <Clock3 size={20} />
-            <span>已确认工时</span>
+            <span>已确认时长</span>
             <strong className="stat-value">{duration(report.durationMs)}</strong>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex flex-col gap-3">
             <CalendarCheck size={20} />
-            <span>工作天数</span>
+            <span>记录天数</span>
             <strong className="stat-value">
               {report.workedDayCount} <small>天</small>
             </strong>

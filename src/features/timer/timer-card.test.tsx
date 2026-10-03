@@ -20,7 +20,7 @@ describe('TimerCard', () => {
       />,
     );
     fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: '开发登录页' } });
-    expect(screen.getByRole('button', { name: '开始工作' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '开始计时' })).toBeDisabled();
     expect(screen.getByText('首次使用，请先确认统计时区')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '前往确认时区' }));
     expect(onConfigure).toHaveBeenCalledOnce();
@@ -42,7 +42,7 @@ describe('TimerCard', () => {
       />,
     );
     fireEvent.change(screen.getByLabelText('任务标题'), { target: { value: '开发登录页' } });
-    fireEvent.click(screen.getByRole('button', { name: '开始工作' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始计时' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('磁盘不可写'));
     expect(screen.getByLabelText('任务标题')).toHaveValue('开发登录页');
   });
@@ -130,6 +130,6 @@ describe('recent task reuse', () => {
       />,
     );
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '开始工作' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '开始计时' })).not.toBeInTheDocument();
   });
 });

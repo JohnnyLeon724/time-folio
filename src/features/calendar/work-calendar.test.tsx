@@ -40,7 +40,7 @@ afterEach(() => {
 it('shows an empty agenda when records exist only in another month', () => {
   render(<WorkCalendar {...props} />);
   fireEvent.click(screen.getByRole('radio', { name: '列表' }));
-  expect(screen.getByText('这个时间范围没有工作记录')).toBeInTheDocument();
+  expect(screen.getByText('这个时间范围没有时间记录')).toBeInTheDocument();
 });
 
 it('today in week view selects the current week rather than the first week', () => {

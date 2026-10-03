@@ -94,7 +94,7 @@ export function WorkCalendar({
       ? `${format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy年 M月d日')} – ${format(endOfWeek(date, { weekStartsOn: 1 }), 'M月d日')}`
       : format(date, 'yyyy 年 M 月');
   return (
-    <section className="calendar-section" aria-label="工作日历">
+    <section className="calendar-section" aria-label="时间日历">
       <div className="calendar-toolbar">
         <div className="calendar-heading">
           <h2 aria-live="polite">{title}</h2>
@@ -194,7 +194,7 @@ export function WorkCalendar({
         </span>
         <span>
           {report
-            ? `${report.workedDayCount} 个工作日 · ${duration(report.durationMs)}`
+            ? `${report.workedDayCount} 个记录日 · ${duration(report.durationMs)}`
             : '点击日期补录，点击时段查看详情'}{' '}
           · {zone}
         </span>

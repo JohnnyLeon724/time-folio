@@ -305,7 +305,7 @@ export function EntrySheet({
   return (
     <Modal
       side
-      title={entry ? (review ? '核对这段工作' : '工作记录') : '补录工作'}
+      title={entry ? (review ? '核对这条记录' : '时间记录') : '补录记录'}
       description={`所有时间均使用 ${zone}。${entry ? statusText[entry.status] : '保存后计入正式报表。'}`}
       onClose={requestClose}
     >
@@ -322,7 +322,7 @@ export function EntrySheet({
         </Field>
         {errors.title && <p className="error">{errors.title.message}</p>}
         <div className="field-heading">
-          <span>实际工作时段</span>
+          <span>实际投入时段</span>
           {!active && (
             <Button
               type="button"
@@ -563,7 +563,7 @@ export function EntrySheet({
         <Modal
           confirmation
           title="删除这条记录？"
-          description="记录会移入回收站，不再计入正式工时。"
+          description="记录会移入回收站，不再计入已确认时长。"
           onClose={() => {
             if (!busy) setDeleteConfirm(false);
           }}

@@ -4,6 +4,20 @@ Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装�
 
 更名前的验收记录保留在后续章节，仅统一名称和文档链接；本次更名的验证证据单独记录如下。
 
+## 通用时间记录文案验证（2026-10-04）
+
+本轮统一计时、日历、报表、核对与备份提示，以及应用简介和 README。“工作区”作为本地数据集合名称保留；数据库字段、CSV 列名和备份格式未变更。
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 前端回归及格式 | `pnpm test`、`pnpm format:check` | 56 项通过，格式通过 |
+| 后端相关回归 | `cargo test --locked --manifest-path src-tauri/Cargo.toml --no-default-features --test domain_validation --test backup_roundtrip` | 10 项通过 |
+| Rust 格式 | `cargo fmt --manifest-path src-tauri/Cargo.toml --check` | 通过 |
+| 文案扫描 | 检查 `src`、`src-tauri/src`、应用配置和 README 中的“工作”“工时” | 界面仅保留数据集合含义的“工作区”，README 保留适用场景和历史设计链接 |
+| 类型检查及 Windows 构建 | `pnpm exec tauri build --bundles nsis '--' --locked` | 通过，生成 3.40 MiB NSIS 安装包 |
+
+本轮未关闭或更新用户正在运行的应用，安装后的桌面显示尚待验收。
+
 ## 按标题汇总验证（2026-10-04）
 
 本轮按用户选择采用同名标题聚合展示，原记录保持独立，数据库和备份格式未改动。

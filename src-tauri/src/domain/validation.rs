@@ -27,14 +27,14 @@ pub fn validate_entry(e: &EntryDetail, now: i64) -> Result<()> {
         return Err(fail("单条记录最多 1,000 个时段和核对项"));
     }
     if e.status == Status::Completed && e.segments.is_empty() {
-        return Err(fail("至少添加一个工作时段"));
+        return Err(fail("至少添加一个记录时段"));
     }
     let mut ids = HashSet::new();
     let mut opens = 0;
     for s in &e.segments {
         if s.entry_id != e.id || uuid::Uuid::parse_str(&s.id).is_err() || !ids.insert(s.id.clone())
         {
-            return Err(fail("工作时段 ID 或所属记录无效"));
+            return Err(fail("记录时段 ID 或所属记录无效"));
         }
         if !valid_time(s.start_at) {
             return Err(fail("开始时间超出支持范围"));
@@ -50,7 +50,7 @@ pub fn validate_entry(e: &EntryDetail, now: i64) -> Result<()> {
     if (e.status == Status::Running && opens != 1)
         || (matches!(e.status, Status::Paused | Status::Completed) && opens != 0)
     {
-        return Err(fail("工作状态与开放时段不一致"));
+        return Err(fail("记录状态与开放时段不一致"));
     }
     for (i, a) in e.segments.iter().enumerate() {
         for b in &e.segments[i + 1..] {
@@ -58,7 +58,7 @@ pub fn validate_entry(e: &EntryDetail, now: i64) -> Result<()> {
                 (a.start_at, a.end_at.unwrap_or(i64::MAX)),
                 (b.start_at, b.end_at.unwrap_or(i64::MAX)),
             ) {
-                let mut err = fail("同一记录中的工作时段不能重叠");
+                let mut err = fail("同一记录中的记录时段不能重叠");
                 err.details = serde_json::json!({"segmentId":a.id,"conflictingSegmentId":b.id,"entryId":e.id,"title":e.title,"startAt":b.start_at,"endAt":b.end_at});
                 return Err(err);
             }
@@ -109,7 +109,7 @@ pub fn validate_conflicts(entry: &EntryDetail, others: &[EntryDetail]) -> Result
                     (b.start_at, b.end_at.unwrap_or(i64::MAX)),
                 ) {
                     let mut err =
-                        AppError::new("OVERLAP", format!("与「{}」的工作时间重叠", other.title));
+                        AppError::new("OVERLAP", format!("与「{}」的记录时段重叠", other.title));
                     err.details = serde_json::json!({"segmentId":a.id,"conflictingSegmentId":b.id,"entryId":other.id,"title":other.title,"startAt":b.start_at,"endAt":b.end_at});
                     return Err(err);
                 }

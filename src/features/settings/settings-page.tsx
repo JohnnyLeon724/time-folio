@@ -118,7 +118,7 @@ export function SettingsPage({
       {!workspace.settings.confirmed && (
         <Alert className="mb-5">
           <Globe />
-          <AlertTitle>先确认工时的统计时区</AlertTitle>
+          <AlertTitle>先确认统计时区</AlertTitle>
           <AlertDescription>
             我们已填入系统时区。以后更换电脑，统计时区也会随备份保留。
           </AlertDescription>
@@ -182,7 +182,7 @@ export function SettingsPage({
                 <Database size={22} />
                 <div>
                   <h2>完整备份与迁移</h2>
-                  <p>包含工作记录、待核对记录和回收站。Windows 与 macOS 通用。</p>
+                  <p>包含时间记录、待核对记录和回收站。Windows 与 macOS 通用。</p>
                 </div>
               </div>
               <div className="data-actions">
@@ -323,7 +323,7 @@ export function SettingsPage({
       {zonePreview && (
         <Modal
           title="确认统计时区"
-          description={`改为 ${zonePreview.zone}。工作区间和实际总时长保持不变，日期归属会重新计算。`}
+          description={`改为 ${zonePreview.zone}。记录时段和实际总时长保持不变，日期归属会重新计算。`}
           onClose={() => setZonePreview(null)}
         >
           {zonePreview.changes.length ? (
@@ -388,7 +388,7 @@ export function SettingsPage({
             </div>
           </div>
           <div className="dialog-note">
-            <p>已确认工时：{duration(preview.durationMs)}</p>
+            <p>已确认时长：{duration(preview.durationMs)}</p>
             <p>统计时区：{preview.reportingTimeZone}</p>
             <p>
               源版本：{preview.sourceVersion} · 导出于{' '}
@@ -438,7 +438,7 @@ export function SettingsPage({
         <Modal
           confirmation
           title="删除这份快照？"
-          description="仅删除所选快照，不影响当前工作记录。"
+          description="仅删除所选快照，不影响当前时间记录。"
           onClose={() => {
             if (!busy) setDeleting(null);
           }}

@@ -49,7 +49,7 @@ const columns: ColumnDef<Day>[] = [
     header: '任务',
     cell: ({ row }) => `${new Set(row.original.periods.map((p) => p.entryId)).size} 个任务`,
   },
-  { id: 'periods', header: '工作时段', cell: ({ row }) => `${row.original.periods.length} 个时段` },
+  { id: 'periods', header: '记录时段', cell: ({ row }) => `${row.original.periods.length} 个时段` },
   {
     accessorKey: 'durationMs',
     header: '时长',
@@ -113,7 +113,7 @@ export function WorkDetailsTable({
     <section className="report-table">
       <div className="section-toolbar flex-wrap gap-3">
         <div>
-          <h2>工作明细</h2>
+          <h2>时间明细</h2>
           <p className="text-xs text-muted-foreground">
             按日汇总 · 展开查看独立时段 · 仅已确认记录
           </p>
@@ -207,7 +207,7 @@ export function WorkDetailsTable({
       </Table>
       {!data.length && (
         <EmptyState
-          title={search || selectedDate ? '没有匹配的记录' : '所选期间还没有已确认工时'}
+          title={search || selectedDate ? '没有匹配的记录' : '所选期间还没有已确认时长'}
           description={
             search || selectedDate
               ? '当前日期和任务条件下没有已确认时段，请调整搜索或清除日期筛选。'

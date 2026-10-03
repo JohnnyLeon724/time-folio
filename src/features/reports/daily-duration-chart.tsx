@@ -10,7 +10,7 @@ import { duration } from '@/lib/format';
 import type { Report } from '@/services/types';
 
 const config = {
-  durationMs: { label: '已确认工时', color: 'var(--work-completed)' },
+  durationMs: { label: '已确认时长', color: 'var(--work-completed)' },
 } satisfies ChartConfig;
 
 export function formatHourTick(value: number) {
@@ -34,7 +34,7 @@ export function DailyDurationChart({
         <h2>每天的投入</h2>
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="size-2 rounded-full bg-[var(--work-completed)]" />
-          已确认工时 · 小时
+          已确认时长 · 小时
         </span>
       </div>
       {onSelectDate && (
@@ -57,7 +57,7 @@ export function DailyDurationChart({
       <ChartContainer
         config={config}
         className="h-64 w-full"
-        aria-label="每日已确认工时柱状图，使用左右方向键查看每日时长"
+        aria-label="每日已确认时长柱状图，使用左右方向键查看每日时长"
       >
         <BarChart
           accessibilityLayer
@@ -90,7 +90,7 @@ export function DailyDurationChart({
                   <div className="flex min-w-36 items-center justify-between gap-5">
                     <span className="flex items-center gap-2 text-muted-foreground">
                       <span className="size-2 rounded-sm bg-[var(--work-completed)]" />
-                      已确认工时
+                      已确认时长
                     </span>
                     <strong className="tabular-nums">{duration(Number(value), true)}</strong>
                   </div>
@@ -118,7 +118,7 @@ export function DailyDurationChart({
       </ChartContainer>
       {!days.some((day) => day.durationMs > 0) && (
         <p className="mt-3 text-center text-sm text-muted-foreground">
-          暂无已确认工时，完成记录后即可查看每日趋势。
+          暂无已确认时长，完成记录后即可查看每日趋势。
         </p>
       )}
     </section>

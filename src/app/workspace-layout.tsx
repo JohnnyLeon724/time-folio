@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import logoUrl from '../../src-tauri/icons/source.svg';
 
 const pages = [
-  { id: 'workspace', title: '工作日历', icon: CalendarDays },
+  { id: 'workspace', title: '时间日历', icon: CalendarDays },
   { id: 'report', title: '时间报告', icon: ChartNoAxesCombined },
   { id: 'review', title: '待核对', icon: CheckCheck },
   { id: 'trash', title: '回收站', icon: Trash2 },
@@ -57,7 +57,7 @@ export function WorkspaceLayout({
                   <img src={logoUrl} alt="" width={32} height={32} />
                 </span>
                 <span className="brand-name">
-                  Timefolio<small>工作时间记录</small>
+                  Timefolio<small>时间记录</small>
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -65,7 +65,7 @@ export function WorkspaceLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>工作空间</SidebarGroupLabel>
+            <SidebarGroupLabel>我的时间</SidebarGroupLabel>
             <SidebarMenu>
               {pages.slice(0, 3).map(({ id, title, icon: Icon }) => (
                 <SidebarMenuItem key={id}>
