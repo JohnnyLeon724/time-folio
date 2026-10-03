@@ -19,7 +19,7 @@
 
 Timefolio 将一次活动拆成实际投入的时段：开始计时，休息时暂停，结束后核对，再计入周报与月报。记录保存在本机 SQLite 数据库，可导出 CSV 时间记录表，也可通过完整备份迁移到另一台设备。
 
-**平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)；CI 生成的未签名安装包用于验证，不自动发布 Release。
+**平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。详见[发布指南](docs/release-guide.md)。
 
 ## 功能概览
 
@@ -188,6 +188,8 @@ pnpm exec tauri build --bundles dmg '--' --locked
 
 ## 开发约定与贡献
 
+发布版本时，使用 `pnpm release:version 0.1.1` 同步版本号，编写对应发布说明，再运行 `pnpm release:check v0.1.1`。提交并推送版本标签会创建带 Windows、macOS 安装包及校验值的测试版草稿，不自动公开。首版仍为 `0.1.0`，步骤、签名限制及失败处理见[Release 发布指南](docs/release-guide.md)。
+
 修复问题或扩展功能时，先找到对应的 `features` 页面及 Rust 服务；后续工作可参考[功能与体验优化清单](docs/improvement-backlog.md)。
 
 - **保持职责边界。** 前端负责交互与展示；持久化校验、时间冲突检查及正式统计规则放在 Rust 层。修改备份格式时同步检查 schema 与迁移用例。
@@ -200,6 +202,7 @@ pnpm exec tauri build --bundles dmg '--' --locked
 | 资料                                                                                                                                            | 内容                                         |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | [发布验收记录](docs/release-checklist.md)                                                                                                       | 构建与测试证据、桌面实机检查、发布前未完成项 |
+| [Release 发布指南](docs/release-guide.md) | 版本更新、标签触发、Release 草稿、签名及发布步骤 |
 | [功能与体验优化清单](docs/improvement-backlog.md)                                                                                               | 功能现状、后续建议与验收标准                 |
 | [备份 schema](schemas/backup-v1.schema.json)                                                                                                    | 可移植 JSON 备份的结构约束                   |
 | [项目设计](docs/PROJECT_DESIGN.md)                                                                                                              | 产品初始目标、架构与备份合同提案             |

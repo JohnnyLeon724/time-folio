@@ -25,6 +25,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import logoUrl from '../../src-tauri/icons/source.svg';
+import { version } from '../../package.json';
 
 const pages = [
   { id: 'workspace', title: '时间日历', icon: CalendarDays },
@@ -105,7 +106,7 @@ export function WorkspaceLayout({
           <div className="local-footer">
             <HardDrive />
             <span>
-              本地工作区<small>0.1.0 · 离线可用</small>
+              本地工作区<small>{version} · 离线可用</small>
             </span>
           </div>
         </SidebarFooter>

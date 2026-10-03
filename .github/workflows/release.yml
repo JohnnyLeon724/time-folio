@@ -1,0 +1,73 @@
+name: Release draft
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify tag, versions, identity and release notes
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version=$(node scripts/release-version.mjs check "$RELEASE_TAG")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  verify:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  draft:
+    needs: [version, verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: unsigned-*
+          path: installers
+      - name: Stage installers and SHA-256 checksums
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' windows < <(find installers/unsigned-x86_64-pc-windows-msvc -type f -name '*.exe' -print0)
+          mapfile -d '' macos < <(find installers/unsigned-aarch64-apple-darwin -type f -name '*.dmg' -print0)
+          if [ "${#windows[@]}" -ne 1 ] || [ "${#macos[@]}" -ne 1 ]; then
+            echo 'Expected exactly one Windows installer and one macOS DMG.' >&2
+            exit 1
+          fi
+          mkdir release-files
+          cp "${windows[0]}" "release-files/Timefolio_${VERSION}_windows_x64_setup.exe"
+          cp "${macos[0]}" "release-files/Timefolio_${VERSION}_macos_arm64.dmg"
+          cd release-files
+          sha256sum *.exe *.dmg > SHA256SUMS.txt
+      - name: Create draft prerelease (never publish automatically)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" release-files/* \
+            --repo "$GITHUB_REPOSITORY" --verify-tag --draft --prerelease \
+            --title "Timefolio $RELEASE_TAG" \
+            --notes-file "docs/releases/$RELEASE_TAG.md"
