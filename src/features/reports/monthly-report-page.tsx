@@ -1,6 +1,7 @@
 import { DailyDurationChart } from './daily-duration-chart';
 import { Card, CardContent } from '@/components/ui/card';
 import { WorkDetailsTable } from './work-details-table';
+import { TitleSummary } from './title-summary';
 
 import { Download, CalendarCheck, Clock3, ClipboardCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -93,6 +94,7 @@ function ReportContent({ report, onExport, onEdit, onReview }: Props) {
         selectedDate={selectedDate}
         onClearDate={() => setSelectedDate('')}
       />
+      <TitleSummary rows={report.rows} zone={report.reportingTimeZone} onEdit={onEdit} />
     </>
   );
 }

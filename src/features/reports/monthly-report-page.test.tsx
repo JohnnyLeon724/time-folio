@@ -110,3 +110,20 @@ it('shows a complete week with record drilldown and no monthly export', () => {
   fireEvent.click(screen.getByRole('button', { name: '开发' }));
   expect(onEdit).toHaveBeenCalledWith('0');
 });
+
+it('keeps title totals independent of detail filters and resets summary search on period change', () => {
+  const props = { onEdit: vi.fn(), onReview: vi.fn(), onExport: vi.fn() };
+  const { rerender } = render(<MonthlyReport report={report} {...props} />);
+  fireEvent.change(screen.getByLabelText('筛选明细日期'), { target: { value: '2026-10-03' } });
+  fireEvent.change(screen.getByRole('textbox', { name: '搜索任务' }), {
+    target: { value: '开发' },
+  });
+  expect(screen.getByRole('button', { name: '展开标题汇总 文档' })).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('textbox', { name: '搜索汇总标题' }), {
+    target: { value: '文档' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: '展开标题汇总 文档' }));
+  rerender(<MonthlyReport report={{ ...report, month: '2026-11' }} {...props} />);
+  expect(screen.getByRole('textbox', { name: '搜索汇总标题' })).toHaveValue('');
+  expect(screen.queryByRole('button', { name: /查看原记录/ })).not.toBeInTheDocument();
+});
