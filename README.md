@@ -205,9 +205,8 @@ pnpm exec tauri build --bundles dmg '--' --locked
 | [Release 发布指南](docs/release-guide.md)         | 版本更新、标签触发、Release 草稿、签名及发布步骤 |
 | [功能与体验优化清单](docs/improvement-backlog.md) | 功能现状、后续建议与验收标准                     |
 | [备份 schema](schemas/backup-v1.schema.json)      | 可移植 JSON 备份的结构约束                       |
-| [项目设计](docs/PROJECT_DESIGN.md)                | 产品初始目标、架构与备份合同提案                 |
 
-项目设计保留历史上下文，部分内容可能与当前实现不同；功能以源码为准，验收状态以发布验收记录为准。`docs/superpowers/` 下的设计与实施计划仅保留在本地，不纳入版本控制。
+功能以源码为准，验收状态以发布验收记录为准。早期设计提案可在 Git 历史中查阅。`docs/superpowers/` 下的设计与实施计划仅保留在本地，不纳入版本控制。
 
 ## 许可证与致谢
 

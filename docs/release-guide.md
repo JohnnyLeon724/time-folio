@@ -1,6 +1,6 @@
 # Timefolio Release 发布指南
 
-推送 `vX.Y.Z` 标签会触发双平台验证，通过后创建 GitHub Release 草稿。草稿默认标记为测试版，不会自动公开。本流程支持 Windows x64 的 NSIS 安装包和 macOS arm64 的 DMG。
+首版 `v0.1.0` 可按下文手动上传 Windows 安装包并发布测试版。后续推送 `vX.Y.Z` 标签会触发双平台验证，通过后创建 GitHub Release 草稿。草稿默认标记为测试版，不会自动公开。自动流程支持 Windows x64 的 NSIS 安装包和 macOS arm64 的 DMG。
 
 工作流定义在 [release.yml](../.github/workflows/release.yml)，复用 [ci.yml](../.github/workflows/ci.yml) 的构建、测试和 Windows → macOS → Windows 合成备份验证。当前流程已在本地检查，尚未在 GitHub 上端到端运行；首次运行应核实两个平台的结果和附件。
 
@@ -13,7 +13,24 @@
 
 当前首版版本号为 `0.1.0`，发布说明草稿在 [v0.1.0.md](releases/v0.1.0.md)。本轮没有推送标签或创建远程 Release。
 
-## 每次发版
+## 首版手动发布（Windows）
+
+此路线使用本机正式配置构建的安装包，不依赖 macOS 构建。首次手动发布与下文的标签自动创建草稿路线二选一，避免同时创建相同版本。
+
+1. 本地改动提交后执行 `git push origin main`，确认远端 `main` 已包含本次提交。此时先不要推送版本标签。若之后继续修改应用代码，应重新构建安装包。
+2. 在 [Actions](https://github.com/JohnnyLeon724/time-folio/actions) 左侧选择 **Release draft**，从工作流菜单选择 **Disable workflow**。只停用此发布流程，保留日常 CI。若它已有运行中的任务，先取消该任务；若已有 `v0.1.0` 草稿，编辑该草稿，不重复创建。
+3. 在本机安装并试用候选包，检查图标、启动、计时、报告及备份恢复。查看本次分支 CI 结果，未通过或未验证的范围应如实标注，不能把构建成功当作实机验收。
+4. 打开 [新建 Release](https://github.com/JohnnyLeon724/time-folio/releases/new)。选择 **Choose a tag**，输入 `v0.1.0` 并创建新标签，**Target** 选刚推送的 `main`。若标签已存在，先确认指向本次发布提交，不要覆盖旧标签。
+5. 标题填写 `Timefolio v0.1.0`，正文复制 [v0.1.0 发布说明](releases/v0.1.0.md)。在附件区域上传 `artifacts/release/v0.1.0/` 中的 `Timefolio_0.1.0_windows_x64_setup.exe` 和 `SHA256SUMS.txt`。该目录被 Git 忽略，附件需单独上传。
+6. 勾选 **This is a pre-release**（测试版），核对文件上传完成后点击 **Publish release**；尚未完成验收可先 **Save draft**。不要上传数据库、个人备份或整个构建目录。
+7. 发布后从 Release 页面重新下载安装包，使用 `Get-FileHash` 与附件中的 SHA-256 比较。然后在 Actions 中重新启用 **Release draft**，供后续版本使用；不要重跑首版的自动发布任务。
+8. 在本机执行 `git fetch origin --tags`，取得网页创建的版本标签。后续从 `0.1.1` 开始按下文发布。
+
+当前可上传文件只包含 Windows 包。后续自动双平台发布时，应在对应版本说明中列出实际提供的两个平台及校验文件。
+
+网页操作依据 GitHub 的[创建 Release 文档](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)和[停用/启用工作流文档](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/disable-and-enable-workflows)。本机尚未执行远端发布，页面文案可能随 GitHub 更新略有差异。
+
+## 后续自动构建并手动公开
 
 以下命令在项目根目录执行，推送前先检查当前分支和改动内容。示例中的 `0.1.1` 应替换为本次版本；首版沿用 `0.1.0`，无需先升到 `0.1.1`。
 

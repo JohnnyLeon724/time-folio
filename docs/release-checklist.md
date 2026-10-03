@@ -4,6 +4,20 @@ Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装�
 
 更名前的验收记录保留在后续章节，仅统一名称和文档链接；本次更名的验证证据单独记录如下。
 
+## 首版手动发布检查（2026-10-04）
+
+删除已过时的初始设计提案，保留测试、备份 schema、第三方许可证、Logo 原稿和既有验收证据。修正引用后，本仓库 Markdown 相对文件链接检查通过。旧图标诊断文件的本地删除被自动审批拒绝，仍保留在 Git 忽略的 `artifacts/` 中，不随推送上传。
+
+| 检查 | 结果 |
+| --- | --- |
+| `pnpm release:check v0.1.0`、`pnpm release:test` | 版本一致，3 项通过 |
+| `pnpm test`、`pnpm typecheck`、`pnpm format:check` | 56 项通过，类型与格式通过 |
+| `cargo test --locked --manifest-path src-tauri/Cargo.toml --no-default-features` | 46 项通过，未启用桌面功能 |
+| `cargo fmt --manifest-path src-tauri/Cargo.toml --check` | 通过 |
+| Git 跟踪文件检查 | 未发现 EXE、数据库、快捷方式、日志或环境变量文件 |
+
+复用下节已成功构建的正式 Windows 安装包，本轮仅修改文档，应用源码未变。上传文件整理在本地 `artifacts/release/v0.1.0/`，含安装包及 `SHA256SUMS.txt`；首版说明仅列出 Windows。安装包 SHA-256 为 `3ad1e27a3a41bdb5f680d601d4f24876025739337fdabbee54308fb98e646fc9`。未执行远端推送、标签创建或公开发布；安装体验与跨平台实机验收仍待完成。
+
 ## Release 流程准备（2026-10-04）
 
 新增版本同步与检查工具、版本标签触发的 Release 草稿流程及[发布指南](release-guide.md)。草稿需完整双平台 CI 和合成备份往返通过后才会创建，默认保留测试版标记。版本仍为 `0.1.0`，本轮未推送标签或创建远程 Release。
@@ -142,7 +156,7 @@ Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装�
 
 ## 数据迁移验收映射
 
-来源：[项目设计第 15 节](PROJECT_DESIGN.md#15-acceptance-criteria)。`portable_migration.rs` 在临时数据库真实执行预览、恢复、启动恢复和再次导出。比较稳定业务字段，忽略导出时间、应用版本及报表参考元数据；分月毫秒另行断言。
+来源：早期项目设计第 15 节（已移除的 `docs/PROJECT_DESIGN.md` 可在 Git 历史中查阅）。`portable_migration.rs` 在临时数据库真实执行预览、恢复、启动恢复和再次导出。比较稳定业务字段，忽略导出时间、应用版本及报表参考元数据；分月毫秒另行断言。
 
 | 场景 | 已有自动证据 | 待验收 |
 | --- | --- | --- |
