@@ -9,7 +9,7 @@
 
 ## Detailed timer specification
 
-The confirmed first-release direction is real-time timing, close-to-tray operation, and user review after sleep. See the [detailed timer design](superpowers/specs/2026-09-29-timefolio-timer-design.md) for state transitions, recovery, UI behavior, command contracts, and acceptance cases. Its explicit defaults refine this overview and remain subject to document review.
+The confirmed first-release direction is real-time timing, close-to-tray operation, and user review after sleep. The detailed timer design (`docs/superpowers/specs/2026-09-29-timefolio-timer-design.md`, retained locally and excluded from version control) describes state transitions, recovery, UI behavior, command contracts, and acceptance cases. Its explicit defaults refine this overview and remain subject to document review.
 
 ## 1. Product Goal
 

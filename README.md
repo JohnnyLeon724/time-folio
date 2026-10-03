@@ -199,18 +199,15 @@ pnpm exec tauri build --bundles dmg '--' --locked
 
 ## 项目资料
 
-| 资料                                                                                                                                            | 内容                                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| [发布验收记录](docs/release-checklist.md)                                                                                                       | 构建与测试证据、桌面实机检查、发布前未完成项 |
-| [Release 发布指南](docs/release-guide.md) | 版本更新、标签触发、Release 草稿、签名及发布步骤 |
-| [功能与体验优化清单](docs/improvement-backlog.md)                                                                                               | 功能现状、后续建议与验收标准                 |
-| [备份 schema](schemas/backup-v1.schema.json)                                                                                                    | 可移植 JSON 备份的结构约束                   |
-| [项目设计](docs/PROJECT_DESIGN.md)                                                                                                              | 产品初始目标、架构与备份合同提案             |
-| [计时与恢复设计](docs/superpowers/specs/2026-09-29-timefolio-timer-design.md)                                                                   | 计时状态、中断恢复与命令约定                 |
-| [黑白工作台设计](docs/superpowers/specs/2026-10-03-monochrome-workspace-design.md)                                                              | 页面布局、日历与视觉规范                     |
-| [计时实施计划](docs/superpowers/plans/2026-09-29-timefolio-v1.md) · [工作台实施计划](docs/superpowers/plans/2026-10-03-monochrome-workspace.md) | 历史实施拆分与验证安排                       |
+| 资料                                              | 内容                                             |
+| ------------------------------------------------- | ------------------------------------------------ |
+| [发布验收记录](docs/release-checklist.md)         | 构建与测试证据、桌面实机检查、发布前未完成项     |
+| [Release 发布指南](docs/release-guide.md)         | 版本更新、标签触发、Release 草稿、签名及发布步骤 |
+| [功能与体验优化清单](docs/improvement-backlog.md) | 功能现状、后续建议与验收标准                     |
+| [备份 schema](schemas/backup-v1.schema.json)      | 可移植 JSON 备份的结构约束                       |
+| [项目设计](docs/PROJECT_DESIGN.md)                | 产品初始目标、架构与备份合同提案                 |
 
-设计与实施计划保留历史上下文，部分内容可能与当前实现不同；功能以源码为准，验收状态以发布验收记录为准。
+项目设计保留历史上下文，部分内容可能与当前实现不同；功能以源码为准，验收状态以发布验收记录为准。`docs/superpowers/` 下的设计与实施计划仅保留在本地，不纳入版本控制。
 
 ## 许可证与致谢
 

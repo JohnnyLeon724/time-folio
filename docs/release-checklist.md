@@ -120,7 +120,7 @@ Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装�
 
 ## 计时验收映射
 
-来源：[详细设计第 10 节](superpowers/specs/2026-09-29-timefolio-timer-design.md#10-验收与交付顺序)。测试文件均位于 `src-tauri/tests/`，界面测试位于 `src/features/`。
+来源：详细设计第 10 节（`docs/superpowers/specs/2026-09-29-timefolio-timer-design.md`，仅保留在本地，不纳入版本控制）。测试文件均位于 `src-tauri/tests/`，界面测试位于 `src/features/`。
 
 | 场景 | 已有自动证据 | 待验收 |
 | --- | --- | --- |
