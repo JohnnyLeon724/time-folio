@@ -1,6 +1,5 @@
 import { WorkspaceLayout } from './workspace-layout';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MonthPicker } from '@/components/date-time-picker';
 import { EmptyState } from '@/components/empty-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialogCancel } from '@/components/ui/alert-dialog';
@@ -22,9 +21,9 @@ import { command, desktop } from '../services/client';
 import type { Workspace, Entry, Report, Context, Mutation, AppError } from '../services/types';
 import { duration, localDate, statusText } from '../lib/format';
 import '../styles.css';
-const MonthlyReport = lazy(() =>
-  import('../features/reports/monthly-report-page').then((module) => ({
-    default: module.MonthlyReport,
+const ReportsPage = lazy(() =>
+  import('../features/reports/reports-page').then((module) => ({
+    default: module.ReportsPage,
   })),
 );
 export default function App() {
@@ -241,22 +240,20 @@ function WorkspaceApp() {
               )}
               {page === 'report' && (
                 <>
-                  <div className="month-picker">
-                    报告月份
-                    <MonthPicker value={month} onChange={setMonth} />
-                  </div>
-                  {report.data ? (
-                    <Suspense fallback={<Skeleton className="h-[480px] w-full" />}>
-                      <MonthlyReport
-                        report={report.data}
-                        onExport={() => void exportCsv()}
-                        onEdit={edit}
-                        onReview={() => setPage('review')}
-                      />
-                    </Suspense>
-                  ) : (
-                    <Skeleton className="h-[480px] w-full" />
-                  )}
+                  <Suspense fallback={<Skeleton className="h-[480px] w-full" />}>
+                    <ReportsPage
+                      key={`${zone}-${workspace.settings.weekStartsOn}`}
+                      month={month}
+                      onMonthChange={setMonth}
+                      monthReport={report.data}
+                      zone={zone}
+                      weekStartsOn={workspace.settings.weekStartsOn}
+                      revision={workspace.timer.workspaceRevision}
+                      onExport={() => void exportCsv()}
+                      onEdit={edit}
+                      onReview={() => setPage('review')}
+                    />
+                  </Suspense>
                 </>
               )}
               {(page === 'review' || page === 'trash') && (

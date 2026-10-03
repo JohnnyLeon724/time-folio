@@ -93,6 +93,60 @@ pub fn report(entries: &[EntryDetail], month: &str, time_zone: &str) -> Result<M
         NaiveDate::from_ymd_opt(first.year(), first.month() + 1, 1)
     }
     .unwrap();
+    range_report(entries, month, time_zone, tz, first, next)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WeekReport {
+    pub week_start: String,
+    pub week_end: String,
+    pub reporting_time_zone: String,
+    pub duration_ms: i64,
+    pub worked_day_count: usize,
+    pub days: Vec<DayReport>,
+    pub rows: Vec<ReportRow>,
+    pub pending_count: usize,
+    pub active_count: usize,
+}
+
+pub fn week_report(
+    entries: &[EntryDetail],
+    date: &str,
+    time_zone: &str,
+    week_starts_on: u8,
+) -> Result<WeekReport> {
+    let tz = zone(time_zone)?;
+    let date = NaiveDate::parse_from_str(date, "%Y-%m-%d")
+        .map_err(|_| AppError::new("VALIDATION", "日期格式须为 YYYY-MM-DD"))?;
+    if !(1999..=2100).contains(&date.year()) || week_starts_on > 6 {
+        return Err(AppError::new("VALIDATION", "日期或每周起始日超出支持范围"));
+    }
+    let offset = (date.weekday().num_days_from_sunday() + 7 - u32::from(week_starts_on)) % 7;
+    let first = date - Duration::days(i64::from(offset));
+    let next = first + Duration::days(7);
+    let result = range_report(entries, "", time_zone, tz, first, next)?;
+    Ok(WeekReport {
+        week_start: first.to_string(),
+        week_end: (next - Duration::days(1)).to_string(),
+        reporting_time_zone: result.reporting_time_zone,
+        duration_ms: result.duration_ms,
+        worked_day_count: result.worked_day_count,
+        days: result.days,
+        rows: result.rows,
+        pending_count: result.pending_count,
+        active_count: result.active_count,
+    })
+}
+
+fn range_report(
+    entries: &[EntryDetail],
+    month: &str,
+    time_zone: &str,
+    tz: Tz,
+    first: NaiveDate,
+    next: NaiveDate,
+) -> Result<MonthReport> {
     let start = boundary(first, tz)?;
     let end = boundary(next, tz)?;
     let mut days = BTreeMap::new();

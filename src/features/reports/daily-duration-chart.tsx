@@ -45,7 +45,7 @@ export function DailyDurationChart({
             value={selectedDate}
             onChange={(e) => onSelectDate(e.target.value)}
           >
-            <option value="">整月日期</option>
+            <option value="">全部日期</option>
             {days.map((day) => (
               <option key={day.date} value={day.date}>
                 {day.date} · {duration(day.durationMs, true)}

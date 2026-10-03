@@ -4,6 +4,22 @@ Timefolio 尚未完成跨平台发布验收。下表区分自动测试、安装�
 
 更名前的验收记录保留在后续章节，仅统一名称和文档链接；本次更名的验证证据单独记录如下。
 
+## 周报验证（2026-10-04）
+
+本轮增加完整周报、周/月切换和周导航；任务维度汇总仍未实施。
+
+| 检查 | 命令或证据 | 结果 |
+| --- | --- | --- |
+| 前端测试 | `pnpm test` | 12 个测试文件、50 项通过 |
+| Rust 测试 | `cargo test --locked --manifest-path src-tauri/Cargo.toml` | 46 项通过 |
+| 周报边界 | `src-tauri/tests/reporting.rs` | 跨月、跨年、周起始日、相邻周切分、夏令时及排除未确认/已删除记录通过 |
+| 报告交互 | `reports-page.test.tsx`、`monthly-report-page.test.tsx` | 周/月切换、周导航、读取重试、原记录入口及周报隐藏整月导出通过 |
+| Rust 静态检查 | `cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings`、`cargo fmt --manifest-path src-tauri/Cargo.toml --check` | 通过 |
+| 前端格式 | `pnpm format:check`，最终文案调整后复查报告目录 | 通过 |
+| Windows 安装包及类型检查 | `pnpm exec tauri build --bundles nsis '--' --locked`（包含 `tsc --noEmit` 和 Vite 构建） | 通过，生成 3.40 MiB NSIS 安装包，尚未安装验收 |
+
+测试末尾的再次桌面编译曾被正在运行的开发版锁住 `target/debug/timefolio.exe`；保留该进程，改用 `--no-default-features --test reporting` 重跑 5 项报表测试并通过。自动测试不能替代新周报的桌面实机验收。
+
 ## Timefolio 更名验证（2026-10-03）
 
 验证对象为当前工作区的更名改动，包括应用标识、包名、数据库文件名、备份格式、环境变量和 T 字母图标。

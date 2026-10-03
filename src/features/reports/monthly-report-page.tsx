@@ -5,42 +5,49 @@ import { WorkDetailsTable } from './work-details-table';
 import { Download, CalendarCheck, Clock3, ClipboardCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { duration } from '../../lib/format';
-import type { Report } from '../../services/types';
+import type { Report, WeekReport } from '../../services/types';
 import { useState } from 'react';
 interface Props {
-  report: Report;
-  onExport: () => void;
+  report: Report | WeekReport;
+  onExport?: () => void;
   onEdit: (id: string) => void;
   onReview: () => void;
 }
 export function MonthlyReport(props: Props) {
   return (
-    <ReportContent key={`${props.report.month}-${props.report.reportingTimeZone}`} {...props} />
+    <ReportContent
+      key={`${'weekStart' in props.report ? props.report.weekStart : props.report.month}-${props.report.reportingTimeZone}`}
+      {...props}
+    />
   );
 }
 function ReportContent({ report, onExport, onEdit, onReview }: Props) {
   const [selectedDate, setSelectedDate] = useState('');
+  const weekly = 'weekStart' in report;
+  const period = weekly ? `${report.weekStart} 至 ${report.weekEnd}` : report.month;
   return (
     <>
       <div className="report-heading">
         <div>
-          <h1>月度报告</h1>
+          <h1>{weekly ? '周度报告' : '月度报告'}</h1>
           <p>
-            {report.month} · {report.reportingTimeZone}
+            {period} · {report.reportingTimeZone}
           </p>
         </div>
-        <div className="flex flex-col items-start gap-2 sm:items-end">
-          <Button onClick={onExport} disabled={!report.rows.length}>
-            <Download size={17} />
-            导出整月
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            导出范围：{report.month} 整月 · {report.rows.length} 个时段
-          </p>
-          <p className="text-xs text-muted-foreground">
-            搜索和日期筛选仅影响明细，不影响整月导出。
-          </p>
-        </div>
+        {!weekly && (
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <Button onClick={onExport} disabled={!report.rows.length}>
+              <Download size={17} />
+              导出整月
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              导出范围：{report.month} 整月 · {report.rows.length} 个时段
+            </p>
+            <p className="text-xs text-muted-foreground">
+              搜索和日期筛选仅影响明细，不影响整月导出。
+            </p>
+          </div>
+        )}
       </div>
       <div className="report-stats">
         <Card>
@@ -79,7 +86,7 @@ function ReportContent({ report, onExport, onEdit, onReview }: Props) {
         onSelectDate={setSelectedDate}
       />
       <WorkDetailsTable
-        key={report.month}
+        key={period}
         rows={report.rows}
         zone={report.reportingTimeZone}
         onEdit={onEdit}

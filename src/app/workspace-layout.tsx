@@ -28,7 +28,7 @@ import logoUrl from '../../src-tauri/icons/source.svg';
 
 const pages = [
   { id: 'workspace', title: '工作日历', icon: CalendarDays },
-  { id: 'report', title: '月度报告', icon: ChartNoAxesCombined },
+  { id: 'report', title: '时间报告', icon: ChartNoAxesCombined },
   { id: 'review', title: '待核对', icon: CheckCheck },
   { id: 'trash', title: '回收站', icon: Trash2 },
   { id: 'settings', title: '设置与数据', icon: Settings2 },

@@ -98,3 +98,15 @@ it('selects a day by clicking its bar and resets the table page', async () => {
   expect(screen.getByText('第 1 / 1 页')).toBeInTheDocument();
   expect(screen.getByLabelText('筛选明细日期')).toHaveValue('2026-10-01');
 });
+
+it('shows a complete week with record drilldown and no monthly export', () => {
+  const onEdit = vi.fn();
+  const week = { ...report, weekStart: '2026-09-28', weekEnd: '2026-10-04' };
+  render(<MonthlyReport report={week} onEdit={onEdit} onReview={vi.fn()} />);
+  expect(screen.getByRole('heading', { name: '周度报告' })).toBeInTheDocument();
+  expect(screen.getByText(/2026-09-28 至 2026-10-04/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '导出整月' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('筛选明细日期'), { target: { value: '2026-10-03' } });
+  fireEvent.click(screen.getByRole('button', { name: '开发' }));
+  expect(onEdit).toHaveBeenCalledWith('0');
+});

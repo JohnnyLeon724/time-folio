@@ -87,6 +87,10 @@ export interface Report {
   pendingCount: number;
   activeCount: number;
 }
+export interface WeekReport extends Omit<Report, 'month'> {
+  weekStart: string;
+  weekEnd: string;
+}
 export interface Preview {
   token: string;
   entryCount: number;

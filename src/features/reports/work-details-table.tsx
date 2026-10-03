@@ -207,7 +207,7 @@ export function WorkDetailsTable({
       </Table>
       {!data.length && (
         <EmptyState
-          title={search || selectedDate ? '没有匹配的记录' : '这个月还没有已确认工时'}
+          title={search || selectedDate ? '没有匹配的记录' : '所选期间还没有已确认工时'}
           description={
             search || selectedDate
               ? '当前日期和任务条件下没有已确认时段，请调整搜索或清除日期筛选。'

@@ -133,6 +133,15 @@ impl Controller {
                     &crate::db::settings(c)?.reporting_time_zone,
                 )?)?)
             }),
+            "get_week_report" => self.timer.db.read(|c| {
+                let settings = crate::db::settings(c)?;
+                Ok(serde_json::to_value(reports::week_report(
+                    &records::all(c)?,
+                    &text("date")?,
+                    &settings.reporting_time_zone,
+                    settings.week_starts_on,
+                )?)?)
+            }),
             "parse_local" => Ok(json!(reports::parse_local(
                 &text("value")?,
                 &text("zone")?,
@@ -243,6 +252,7 @@ pub async fn command(app: tauri::AppHandle, op: String, input: Value) -> Result<
         "get_workspace"
             | "get_timer_state"
             | "get_month_report"
+            | "get_week_report"
             | "parse_local"
             | "preview_reporting_zone"
             | "inspect_backup"
