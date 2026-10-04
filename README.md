@@ -5,6 +5,10 @@
 <h1 align="center">Timefolio</h1>
 
 <p align="center">
+  简体中文 · <a href="README_EN.md">English</a>
+</p>
+
+<p align="center">
   <strong>记录每一段投入，回看时间去向。</strong><br>
   用于工作、学习及其他活动的离线桌面时间记录应用。
 </p>
@@ -19,7 +23,7 @@
 
 Timefolio 将一次活动拆成实际投入的时段：开始计时，休息时暂停，结束后核对，再计入周报与月报。记录保存在本机 SQLite 数据库，可导出 CSV 时间记录表，也可通过完整备份迁移到另一台设备。
 
-**平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。详见[发布指南](docs/release-guide.md)。
+**平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。配置见[发布工作流](.github/workflows/release.yml)。
 
 ## 功能概览
 
@@ -36,6 +40,8 @@ Timefolio 将一次活动拆成实际投入的时段：开始计时，休息时�
 主要入口位于[前端功能目录](src/features/)；计时、校验、报告与恢复规则由 [Rust 服务](src-tauri/src/services/)处理。
 
 ## 上手使用
+
+前往 [Releases](https://github.com/JohnnyLeon724/time-folio/releases) 下载已发布版本的安装包。首版提供 Windows x64 安装程序，下载 `.exe` 后双击安装；`Source code` 是源码压缩包。当前应用界面为简体中文，英文 README 不代表已提供英文界面。
 
 1. **确认时区。** 首次打开，在「设置与数据」确认统计时区。
 2. **开始记录。** 在「时间日历」输入任务标题或选择最近任务，点击「开始计时」，休息时暂停。
@@ -188,9 +194,11 @@ pnpm exec tauri build --bundles dmg '--' --locked
 
 ## 开发约定与贡献
 
-发布版本时，使用 `pnpm release:version 0.1.1` 同步版本号，编写对应发布说明，再运行 `pnpm release:check v0.1.1`。提交并推送版本标签会创建带 Windows、macOS 安装包及校验值的测试版草稿，不自动公开。首版仍为 `0.1.0`，步骤、签名限制及失败处理见[Release 发布指南](docs/release-guide.md)。
+发布版本时，使用 `pnpm release:version 0.1.1` 同步版本号，编写对应发布说明，再运行 `pnpm release:check v0.1.1`。提交并推送版本标签会创建带 Windows、macOS 安装包及校验值的测试版草稿，不自动公开。首版仍为 `0.1.0`，平台范围和限制见[首版发布说明](docs/releases/v0.1.0.md)，自动发布配置见[发布工作流](.github/workflows/release.yml)。
 
 修复问题或扩展功能时，先找到对应的 `features` 页面及 Rust 服务；后续工作可参考[功能与体验优化清单](docs/improvement-backlog.md)。
+
+问题反馈与提交改动的说明见[贡献指南](CONTRIBUTING.md)。
 
 - **保持职责边界。** 前端负责交互与展示；持久化校验、时间冲突检查及正式统计规则放在 Rust 层。修改备份格式时同步检查 schema 与迁移用例。
 - **沿用现有风格。** TypeScript 开启严格模式，文件使用 kebab-case，React 组件使用 PascalCase；Rust 沿用 snake_case。格式分别由 [Prettier 配置](.prettierrc.json)与 rustfmt 统一。
@@ -199,18 +207,18 @@ pnpm exec tauri build --bundles dmg '--' --locked
 
 ## 项目资料
 
-| 资料                                              | 内容                                             |
-| ------------------------------------------------- | ------------------------------------------------ |
-| [发布验收记录](docs/release-checklist.md)         | 构建与测试证据、桌面实机检查、发布前未完成项     |
-| [Release 发布指南](docs/release-guide.md)         | 版本更新、标签触发、Release 草稿、签名及发布步骤 |
-| [功能与体验优化清单](docs/improvement-backlog.md) | 功能现状、后续建议与验收标准                     |
-| [备份 schema](schemas/backup-v1.schema.json)      | 可移植 JSON 备份的结构约束                       |
+| 资料                                              | 内容                                         |
+| ------------------------------------------------- | -------------------------------------------- |
+| [发布验收记录](docs/release-checklist.md)         | 构建与测试证据、桌面实机检查、发布前未完成项 |
+| [首版发布说明](docs/releases/v0.1.0.md)           | 下载文件、功能与测试版限制                   |
+| [功能与体验优化清单](docs/improvement-backlog.md) | 功能现状、后续建议与验收标准                 |
+| [备份 schema](schemas/backup-v1.schema.json)      | 可移植 JSON 备份的结构约束                   |
 
 功能以源码为准，验收状态以发布验收记录为准。早期设计提案可在 Git 历史中查阅。`docs/superpowers/` 下的设计与实施计划仅保留在本地，不纳入版本控制。
 
 ## 许可证与致谢
 
-仓库尚未提供项目整体的许可证文件。第三方组件的许可证仅覆盖相应组件，不代表整个项目采用相同许可证。
+Timefolio 采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 JohnnyLeon724`。第三方组件保留各自的许可证和版权声明，详见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
 - shadcn/ui 组件使用 `radix-nova` 风格，声明见 [shadcn MIT 许可证](licenses/shadcn-MIT.txt)。
 - 日历源码来自 ReUI Event Calendar，声明见 [ReUI MIT 许可证](licenses/reui-MIT.txt)。
