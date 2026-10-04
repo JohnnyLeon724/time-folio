@@ -35,7 +35,7 @@ The screenshots show the main page and monthly report. Some labels are from an e
 
 Find published installers on the [Releases page](https://github.com/JohnnyLeon724/time-folio/releases). The first release provides a Windows x64 `.exe` installer. The automatically attached **Source code** archives are for developers, not installation.
 
-The application interface is currently in Simplified Chinese. This English README does not indicate an English UI. Windows x64 and macOS arm64 are the target platforms; cross-platform desktop acceptance is not complete. See the [verification record](docs/release-checklist.md) (Chinese) for tested behavior and outstanding checks.
+The application interface is currently in Simplified Chinese. This English README does not indicate an English UI. Build targets are Windows x64 and macOS arm64 / x64; cross-platform desktop acceptance is not complete. See the [verification record](docs/release-checklist.md) (Chinese) for tested behavior and outstanding checks.
 
 1. Open **设置与数据** (Settings and data) and confirm your reporting time zone.
 2. In **时间日历** (Time calendar), enter a task title or reuse a recent title, then select **开始计时** (Start timer). Pause during breaks.
@@ -148,6 +148,8 @@ pnpm exec tauri build --bundles dmg '--' --locked
 Local installer output is under `src-tauri/target/release/bundle/`. CI passes an explicit target and writes under `src-tauri/target/<target>/release/bundle/` instead. For version `0.1.0`, the default Windows output is `src-tauri/target/release/bundle/nsis/Timefolio_0.1.0_x64-setup.exe`.
 
 Branch CI builds test installers and checks synthetic backup migration from Windows to macOS and back. A version-tag push triggers the release workflow, which creates a draft prerelease after verification. The first Windows release can also be uploaded manually. See the [release workflow](.github/workflows/release.yml) for configuration and the [first release notes](docs/releases/v0.1.0.md) (Chinese) for scope and limitations. Publishing a draft remains a maintainer action.
+
+The workflow uploads Windows x64 EXE/MSI, macOS arm64/x64 DMGs, and SHA-256 checksums using the built-in GitHub token. Reruns replace assets in an existing draft and refuse to overwrite a published release. Once the workflow is on the default branch, `gh workflow run release.yml --ref v0.1.1` can build an existing version tag manually; branch dispatches are rejected. Windows installers have no developer certificate; macOS builds use ad-hoc signing without notarization. In-app updates are not configured.
 
 ## Contributing and documentation
 

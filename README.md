@@ -32,7 +32,7 @@
 
 Timefolio 将一次活动拆成实际投入的时段：开始计时，休息时暂停，结束后核对，再计入周报与月报。记录保存在本机 SQLite 数据库，可导出 CSV 时间记录表，也可通过完整备份迁移到另一台设备。
 
-**平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。配置见[发布工作流](.github/workflows/release.yml)。
+**平台与状态：** 构建目标为 Windows x64 和 macOS arm64 / x64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。配置见[发布工作流](.github/workflows/release.yml)。
 
 ## 界面预览
 
@@ -212,6 +212,10 @@ pnpm exec tauri build --bundles dmg '--' --locked
 ## 开发约定与贡献
 
 发布版本时，使用 `pnpm release:version 0.1.1` 同步版本号，编写对应发布说明，再运行 `pnpm release:check v0.1.1`。提交并推送版本标签会创建带 Windows、macOS 安装包及校验值的测试版草稿，不自动公开。首版仍为 `0.1.0`，平台范围和限制见[首版发布说明](docs/releases/v0.1.0.md)，自动发布配置见[发布工作流](.github/workflows/release.yml)。
+
+发布说明写入 `docs/releases/v0.1.1.md`，包含标题 `# Timefolio v0.1.1`。提交并推送改动后，执行 `git tag v0.1.1` 和 `git push origin v0.1.1` 即可触发构建。产物包括 Windows x64 EXE/MSI、macOS arm64/x64 DMG 及 `SHA256SUMS.txt`；Windows 未使用开发者证书，macOS 仅使用 ad-hoc 签名，未公证。上传使用 GitHub 自动提供的令牌，无需额外配置发布密钥。
+
+失败后可在 Actions 重新运行；已有草稿会更新同名附件，已公开的版本会拒绝覆盖。工作流进入默认分支后，也可执行 `gh workflow run release.yml --ref v0.1.1` 手动构建已有标签；在分支上手动运行会被拒绝。下载验收完成后，在 Releases 中公开草稿。此流程未接入应用内自动更新。
 
 修复问题或扩展功能时，先找到对应的 `features` 页面及 Rust 服务；后续工作可参考[功能与体验优化清单](docs/improvement-backlog.md)。
 
