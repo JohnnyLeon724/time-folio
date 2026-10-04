@@ -261,8 +261,7 @@ it('submits corrected picker times after returning from conflict details', async
     endAt: at('02:00:00'),
   });
   expect(requests[1].context.requestId).not.toBe(requests[0].context.requestId);
-  // Intel macOS CI can take over 5 seconds to render four picker interactions.
-}, 15_000);
+});
 
 it('keeps the draft when the conflicting record cannot be read and offers retry', async () => {
   openEditor();

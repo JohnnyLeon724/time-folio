@@ -50,7 +50,8 @@ jobs:
       - name: Select Rust toolchain
         run: rustup default 1.96.0
       - name: Frontend tests
-        run: pnpm test
+        # Hosted Intel Macs need more time for jsdom interactions under load.
+        run: pnpm exec vitest run --maxWorkers=2 --minWorkers=1 --testTimeout=30000
       - name: Typecheck
         run: pnpm typecheck
       - name: Frontend formatting
