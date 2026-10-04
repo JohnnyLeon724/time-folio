@@ -5,6 +5,14 @@
 <h1 align="center">Timefolio</h1>
 
 <p align="center">
+  <a href="https://github.com/JohnnyLeon724/time-folio/releases"><img src="https://img.shields.io/github/v/release/JohnnyLeon724/time-folio?include_prereleases&amp;style=flat-square&amp;color=087f5b" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-087f5b?style=flat-square" alt="License: MIT"></a>
+  <a href="src-tauri/Cargo.toml"><img src="https://img.shields.io/badge/Tauri-2-24C8D8?style=flat-square&amp;logo=tauri&amp;logoColor=white" alt="Tauri 2"></a>
+  <a href="src-tauri/Cargo.toml"><img src="https://img.shields.io/badge/Rust-2021-CE422B?style=flat-square&amp;logo=rust&amp;logoColor=white" alt="Rust edition 2021"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&amp;logo=react&amp;logoColor=white" alt="React 19"></a>
+</p>
+
+<p align="center">
   <a href="README.md">简体中文</a> · English
 </p>
 
@@ -14,6 +22,14 @@
 </p>
 
 Timefolio records the intervals you actually spend on an activity. Start a timer, pause for breaks, then review the intervals before including them in weekly and monthly reports. Records live in a local SQLite database. Export monthly CSV files for analysis or a complete backup to move your workspace to another device.
+
+## Screenshots
+
+The screenshots show the main page and monthly report. Some labels are from an earlier version and may differ from the current interface.
+
+|                                    Main page: timer and calendar                                    |                                      Report page: duration totals and daily distribution                                      |
+| :-------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------: |
+| ![Timefolio main page with a timer input and monthly calendar records](assets/screenshots/main.png) | ![Timefolio monthly report with confirmed duration, recorded days, and a daily duration chart](assets/screenshots/report.png) |
 
 ## Download and get started
 
@@ -145,4 +161,4 @@ The following detailed project documents are currently in Chinese:
 
 ## License and acknowledgments
 
-Timefolio is licensed under the [MIT License](LICENSE), copyright (c) 2026 JohnnyLeon724. Third-party components retain their own licenses and copyright notices. See [third-party notices](THIRD_PARTY_NOTICES.md), including [shadcn/ui](licenses/shadcn-MIT.txt) and [ReUI](licenses/reui-MIT.txt).
+Timefolio is licensed under the [MIT License](LICENSE), copyright (c) 2026 JohnnyLeon724. Third-party components retain their own licenses and copyright notices. See [third-party notices](THIRD_PARTY_NOTICES.md), including shadcn/ui and ReUI.

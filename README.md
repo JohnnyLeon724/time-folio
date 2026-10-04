@@ -5,6 +5,14 @@
 <h1 align="center">Timefolio</h1>
 
 <p align="center">
+  <a href="https://github.com/JohnnyLeon724/time-folio/releases"><img src="https://img.shields.io/github/v/release/JohnnyLeon724/time-folio?include_prereleases&amp;style=flat-square&amp;color=087f5b" alt="GitHub release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-087f5b?style=flat-square" alt="License: MIT"></a>
+  <a href="src-tauri/Cargo.toml"><img src="https://img.shields.io/badge/Tauri-2-24C8D8?style=flat-square&amp;logo=tauri&amp;logoColor=white" alt="Tauri 2"></a>
+  <a href="src-tauri/Cargo.toml"><img src="https://img.shields.io/badge/Rust-2021-CE422B?style=flat-square&amp;logo=rust&amp;logoColor=white" alt="Rust edition 2021"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&amp;logo=react&amp;logoColor=white" alt="React 19"></a>
+</p>
+
+<p align="center">
   简体中文 · <a href="README_EN.md">English</a>
 </p>
 
@@ -14,6 +22,7 @@
 </p>
 
 <p align="center">
+  <a href="#界面预览">界面预览</a> ·
   <a href="#功能概览">功能概览</a> ·
   <a href="#上手使用">上手使用</a> ·
   <a href="#数据与备份">数据与备份</a> ·
@@ -24,6 +33,14 @@
 Timefolio 将一次活动拆成实际投入的时段：开始计时，休息时暂停，结束后核对，再计入周报与月报。记录保存在本机 SQLite 数据库，可导出 CSV 时间记录表，也可通过完整备份迁移到另一台设备。
 
 **平台与状态：** 目标平台为 Windows x64 和 macOS arm64，尚未完成跨平台发布验收。构建结果、实机检查与未完成项见[发布验收记录](docs/release-checklist.md)。分支 CI 生成测试安装包；推送版本标签后，发布流程在完整验证通过时创建 Release 草稿，由维护者验收后公开。配置见[发布工作流](.github/workflows/release.yml)。
+
+## 界面预览
+
+以下截图展示主页面和月度报告页面，部分文案来自较早版本，与当前界面可能略有不同。
+
+|                             主页面：计时与日历                             |                                 报告页面：时长统计与每日分布                                 |
+| :------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------: |
+| ![Timefolio 主页面，包含计时输入框和月历记录](assets/screenshots/main.png) | ![Timefolio 月度报告，包含已确认时长、记录天数和每日时长图表](assets/screenshots/report.png) |
 
 ## 功能概览
 
@@ -220,5 +237,5 @@ pnpm exec tauri build --bundles dmg '--' --locked
 
 Timefolio 采用 [MIT 许可证](LICENSE)，版权声明为 `Copyright (c) 2026 JohnnyLeon724`。第三方组件保留各自的许可证和版权声明，详见[第三方声明](THIRD_PARTY_NOTICES.md)。
 
-- shadcn/ui 组件使用 `radix-nova` 风格，声明见 [shadcn MIT 许可证](licenses/shadcn-MIT.txt)。
-- 日历源码来自 ReUI Event Calendar，声明见 [ReUI MIT 许可证](licenses/reui-MIT.txt)。
+- shadcn/ui 组件使用 `radix-nova` 风格，采用 MIT 许可证。
+- 日历源码来自 ReUI Event Calendar，采用 MIT 许可证。

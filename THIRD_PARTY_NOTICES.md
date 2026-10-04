@@ -4,10 +4,10 @@ Timefolio's own code is covered by the root [MIT License](LICENSE). Third-party 
 
 Timefolio 自有代码采用根目录的 [MIT 许可证](LICENSE)。第三方代码保留原作者的版权和许可条款。
 
-| Included UI source / 内含界面源码 | Copyright / 版权声明              | License text / 许可全文        |
-| --------------------------------- | --------------------------------- | ------------------------------ |
-| shadcn/ui                         | Copyright (c) 2023 shadcn         | [MIT](licenses/shadcn-MIT.txt) |
-| ReUI Event Calendar               | Copyright (c) 2025 Keenthemes Inc | [MIT](licenses/reui-MIT.txt)   |
+| Included UI source / 内含界面源码 | Copyright / 版权声明              | License / 许可证 |
+| --------------------------------- | --------------------------------- | ---------------- |
+| shadcn/ui                         | Copyright (c) 2023 shadcn         | MIT              |
+| ReUI Event Calendar               | Copyright (c) 2025 Keenthemes Inc | MIT              |
 
 This table documents the UI source notices currently retained in this repository. It is not a complete inventory of all direct and transitive dependencies. Dependency versions are recorded in `pnpm-lock.yaml` and `src-tauri/Cargo.lock`; each dependency's own license applies. Preserve applicable notices when redistributing source or binaries.
 
